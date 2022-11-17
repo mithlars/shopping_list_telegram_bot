@@ -1,11 +1,28 @@
 import sqlite3
+# from data_base.sql_purchases import *
+
+
+base = sqlite3.connect('shopping_list.db')
+cur = base.cursor()
 
 
 def sql_start():
-    global base, cur
-    base = sqlite3.connect('shopping_list.db')
-    cur = base.cursor()
-    base.execute('CREATE TABLE IF NOT EXISTS list001(name TEXT)')
+    # global base, cur
+    base.execute('CREATE TABLE IF NOT EXISTS list001 (' \
+                 'id INTEGER PRIMARY KEY AUTOINCREMENT,' \
+                 'name VARCHAR(50),' \
+                 'comment TEXT)')
+    # Добавить заполнение пустой базы
+
+    base.execute('CREATE TABLE IF NOT EXISTS categories (' \
+                 'id INTEGER PRIMARY KEY AUTOINCREMENT, ' \
+                 'name VARCHAR(50),' \
+                 'description TEXT)')
+    # Добавить заполнение пустой базы
+
+    base.execute('CREATE TABLE IF NOT EXISTS link_categories_and_purchases ('
+                 'category_id INTEGER, '
+                 'purchase_id INTEGER)')
     base.commit()
     if base:
         return True
@@ -13,27 +30,22 @@ def sql_start():
         return False
 
 
-async def sql_add_command(shoppings_for_add):
-    for shopping in shoppings_for_add:
-        cur.execute('INSERT INTO list001 (name) VALUES (?)', (shopping,))
-    base.commit()
-
-
-
-async def sql_read_all():
-    data = cur.execute('SELECT id, name FROM list001').fetchall()
-    return data
-
-
-async def sql_delete_shopping(shopping):
-    shopping = str(shopping)
-    all = await sql_read_all()
-    cur.execute(f"""DELETE FROM list001 WHERE id='{shopping}'""")
-    base.commit()
-    if len(all) == 1:
-        await sql_add_command(["The list is cleared."])
-
-async def sql_clear_all():
-    cur.execute('DELETE FROM list001')
-    base.commit()
-    return True
+async def make_text_from_select(data, counter_starts_from):
+    print(data)
+    if data[0][1] == "The list is empty.":
+        return 'The list is empty.'
+    else:
+        text = ""
+        counter = counter_starts_from
+        i = 1
+        for purchase in data:
+            name = purchase[1]
+            comment = purchase[2]
+            if comment == None:
+                comment = ""
+            text = text + f"{str(counter)} {name}         {comment}"
+            if i != len(data):
+                text = text + "\n"
+            counter += 1
+            i += 1
+        return text

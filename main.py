@@ -1,5 +1,7 @@
 from create_bot import bot, dp
-from handlers import list
+from handlers.list_of_purchases import register_handlers_purchases
+from handlers.category_add_update import register_handlers_add_update_category
+from handlers.categories import register_handlers_categories
 from aiogram.utils import executor
 from data_base.sql_main import sql_start
 
@@ -9,7 +11,10 @@ async def on_startup(_):
     if sql_start():
         await bot.send_message(129727111, 'Data base connected!')
 
-list.register_handlers_list(dp)
+
+register_handlers_add_update_category(dp)
+register_handlers_categories(dp)
+register_handlers_purchases(dp)
 
 
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
