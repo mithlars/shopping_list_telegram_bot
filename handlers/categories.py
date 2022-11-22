@@ -1,11 +1,10 @@
 from aiogram import types, Dispatcher
 from create_bot import bot
-from keyboards.categories_kb import categories_kb
+from keyboards.categories_kb import *
 from keyboards.shared_kb import *
 from data_base.sql_categories import *
-# from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
-from handlers.list_of_purchases import read_list_of_purchases
+from handlers.purchases_list import read_list_of_purchases
 
 
 async def list_of_categories(message: types.Message):
@@ -42,10 +41,8 @@ async def list_for_delete_som_category(message: types.Message):
             await bot.send_message(message.chat.id, categories_text, reply_markup=delete_keyboard)
 
 
-
-
-
 async def delete_current_category_inline(callback: types.CallbackQuery):
+    print('\n***********************************\ndelete_current_category_inline ____START\n')
     categories_count = len(await sql_read_categories())
     category_id = callback.data.replace("category_remove ", "")              # print(f"Удаляем категорию под id: '{category_id}'")
     is_deleted = await sql_delete_category(category_id)
@@ -55,15 +52,18 @@ async def delete_current_category_inline(callback: types.CallbackQuery):
     else:
         bot.send_message(callback.message.chat.id, 'Категория уже используется\n')
     await list_for_delete_som_category(callback.message)
+    print('\ndelete_current_category_inline ____FINISH\n***********************************\n')
 
 
+# Нужно изменить категоризирование так, чтобы можно было добавить несколько категорий для каждой покупки
 async def categorize(callback: types.CallbackQuery):
-    print('Категоризируем')
+    print('\n***********************************\ncategorize ____START\n')
     data = callback.data.replace('categorize ', '').split(' ')
     id_of_list_of_purchases_ids = data[0]
     category_id = data[1]
     await sql_categorize(id_of_list_of_purchases_ids, category_id)
     await read_list_of_purchases(callback.message)
+    print('\ncategorize ____FINISH\n***********************************\n')
 
 
 def register_handlers_categories(dp: Dispatcher):

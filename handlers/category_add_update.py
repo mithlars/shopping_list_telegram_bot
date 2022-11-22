@@ -5,7 +5,7 @@ from keyboards.shared_kb import *
 from data_base.sql_categories import *
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
-from handlers.list_of_purchases import read_list_of_purchases
+from handlers.purchases_list import read_list_of_purchases
 from handlers.categories import *
 
 

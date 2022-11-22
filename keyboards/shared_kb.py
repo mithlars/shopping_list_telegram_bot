@@ -2,21 +2,6 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from data_base.sql_main import *
 
 
-async def make_delete_from_list_inline_keyboard(categories_ids):
-    keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=8)
-    counter_starts_from = 1
-    for category_id in categories_ids:
-        purchases_ids_data = cur.execute('SELECT purchase_id FROM link_categories_and_purchases WHERE category_id IS ?',
-                           (category_id,)).fetchall()
-        keyboard_and_buttons_list = await make_inline_keyboard_and_buttons_list(
-                                                        purchases_ids_data, 'del ', [], counter_starts_from)
-        buttons_list = keyboard_and_buttons_list['buttons_list']
-        counter_starts_from += keyboard_and_buttons_list['buttons_counter']
-        for button in buttons_list:
-            keyboard.insert(button)
-    return keyboard
-
-
 async def make_inline_keyboard_and_buttons_list(Objects_ids_data, command_text, exceptions, counter_starts_from):
     button_text_counter = counter_starts_from
     buttons_counter = 0

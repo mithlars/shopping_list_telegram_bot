@@ -15,21 +15,31 @@ async def make_categories_delete_exceptions_list(categories_data):
 
 
 async def sql_categorize(id_of_list_of_purchases_ids, category_id):
+    print('sql_categorize')
+    print(f'category_id: {category_id}')
     purchases_ids_str = cur.execute('SELECT comment FROM list001 WHERE id IS ?',
                                     (str(id_of_list_of_purchases_ids),)).fetchall()[0][0]
-    cur.execute('DELETE FROM list001 WHERE id IS ?', (str(id_of_list_of_purchases_ids),))        # print("Удаляем из строки со списком индексов скобки")
+    cur.execute('DELETE FROM list001 WHERE id IS ?', (str(id_of_list_of_purchases_ids),))
     purchases_ids_str = str(purchases_ids_str).replace("[", "").replace(']', "")
-    # print("Строка со списком индексов после удаления скобок: " + indexes_str)         print("Разделяем строку на массив индексов")
-
     purchases_ids_list = purchases_ids_str.split(", ")
-    # for purchase_id in purchases_ids_list: # Цикл для преобразования массива строк в массив цифр
-    #     purchase_index = purchases_ids_list.index(purchase_id)  # Получаем индекс элемента массива
-    #     purchases_ids_list[purchase_index] = int(purchases_ids_list[purchase_index])  # Преобразуем тип элемента массива в int
-
     for purchase_id in purchases_ids_list:
-        cur.execute("INSERT INTO link_categories_and_purchases (category_id, purchase_id) VALUES (?, ?)",
-                    (category_id, int(purchase_id)))
+        if int(category_id) != -1:
+            print(f"Добавляем связь товара {purchase_id} с категорией '{category_id}'")
+            cur.execute("INSERT INTO link_categories_and_purchases (category_id, purchase_id) VALUES (?, ?)",
+                        (category_id, int(purchase_id)))
+            print(f"Удаляем связь товара {purchase_id} с категорией 'Бех категории'")
+            cur.execute("""DELETE FROM link_categories_and_purchases WHERE category_id='-1' and purchase_id=?""",
+                        (int(purchase_id),))
     base.commit()
+
+
+async def sql_get_categories_ids_for_purchase(purchase_id):
+    categories_ids_data = cur.execute(
+        'SELECT category_id FROM link_categories_and_purchases WHERE purchase_id IS ?', (purchase_id,)).fetchall()
+    categories_ids = []
+    for category_id_data in categories_ids_data:
+        categories_ids.append(category_id_data[0])
+    return categories_ids
 
 
 async def sql_add_category(name, description):
@@ -52,12 +62,33 @@ async def sql_read_current_group_categories():
     return data
 
 
-async def sql_read_used_categories_ids():
-    # data = cur.execute('SELECT DISTINCT category_id FROM list001 WHERE category_id IS NOT NULL').fetchall()
-    used_categories_ids_data = cur.execute('SELECT DISTINCT category_id FROM link_categories_and_purchases').fetchall()
+async def sql_read_used_categories_ids(purchases_ids_list=[]):
+    print('sql_read_used_categories_ids')
+    print(f'purchases_ids_list: {purchases_ids_list}')
     used_categories_ids = []
-    for category_id_data in used_categories_ids_data:
-        used_categories_ids.append(category_id_data[0])
+    if purchases_ids_list:
+        for purchase_id in purchases_ids_list:
+            print(f'purchase_id: {purchase_id}')
+            category_id = cur.execute('SELECT category_id FROM link_categories_and_purchases WHERE purchase_id IS ?',
+                                      (purchase_id,)).fetchall()[0][0]
+            used_categories_ids.append(category_id)
+            print(f'category_id: {category_id}')
+            print(f'used_categories_ids: {used_categories_ids}')
+        used_categories_ids = [*set(used_categories_ids)]
+        print(print(f'used_categories_ids after removing duplicates: {used_categories_ids}'))
+    else:
+        used_categories_ids_data = cur.execute('SELECT DISTINCT category_id FROM link_categories_and_purchases').fetchall()
+        for category_id_data in used_categories_ids_data:
+            # if purchases_ids_list:
+            #     specific_category_purchases_ids_lists = cur.execute(
+            #         'SELECT DISTINCT purchase_id FROM link_categories_and_purchases WHERE category_id IS ?',
+            #         (category_id_data[0],))
+            #     for purchase_id_list in specific_category_purchases_ids_lists:
+            #         if purchase_id_list[0] in purchases_ids_list:
+            #             used_categories_ids.append(category_id_data[0])
+            # else:
+            used_categories_ids.append(category_id_data[0])
+
     return used_categories_ids
 
 

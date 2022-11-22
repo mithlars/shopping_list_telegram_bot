@@ -38,15 +38,18 @@ stop_kb_for_upd \
     .insert(stop_kb_for_upd2)
 
 
-async def make_categorize_keyboard(id_list_of_ids):
+async def make_categorize_keyboard(id_list_of_ids, command_text='categorize '):
     categories = await sql_read_categories()
-    categorize_keyword = InlineKeyboardMarkup(resize_keyboard=True, row_width=3)
+    categorize_keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=3)
     for category in categories:
+        category_id = category[0]
         keyboard_text = category[1]
-        keyboard_command = 'categorize ' + str(id_list_of_ids) + ' ' + str(category[0])
+        keyboard_command = command_text + str(id_list_of_ids) + ' ' + str(category_id)
         button = InlineKeyboardButton(text=keyboard_text, callback_data=keyboard_command)
-        categorize_keyword.insert(button)
-    return categorize_keyword
+        categorize_keyboard.insert(button)
+    keyboard_command = f'{command_text}{id_list_of_ids} -1'
+    categorize_keyboard.insert(InlineKeyboardButton(text='Без категории', callback_data=keyboard_command))
+    return categorize_keyboard
 
 
 comment_for_category = ReplyKeyboardMarkup(resize_keyboard=True)
