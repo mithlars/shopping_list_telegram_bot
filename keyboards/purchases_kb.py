@@ -22,6 +22,7 @@ purchase_main_kb \
 
 
 async def make_purchases_list_inline_keyboard(categories_ids, command_text):
+    print('___ make_purchases_list_inline_keyboard ____START')
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=8)
     counter_starts_from = 1
     for category_id in categories_ids:
@@ -33,6 +34,7 @@ async def make_purchases_list_inline_keyboard(categories_ids, command_text):
         counter_starts_from += keyboard_and_buttons_list['buttons_counter']
         for button in buttons_list:
             keyboard.insert(button)
+    print('___ make_purchases_list_inline_keyboard ____FINISH')
     return keyboard
 
 

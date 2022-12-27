@@ -2,16 +2,16 @@ from data_base.sql_main import cur, base, make_text_from_select
 
 
 async def sql_add_command(purchases_for_add, is_clearing):
-    print('sql_add_command')
+    print('___ sql_add_command ____START')
     added_purchases_ids_list = []
     existing_purchases_ids_list = []
     id_list_of_ids = -2
-    text = ''
+    new_purchases_text = ''
     for new_purchase_name in purchases_for_add:
         existing_purchase_data = cur.execute('SELECT id FROM list001 WHERE name is ?', (new_purchase_name,)).fetchall()
         print(f'existing_purchase_data: {existing_purchase_data}')
         if not existing_purchase_data:
-            text += f'{new_purchase_name}\n'
+            new_purchases_text += f'{new_purchase_name}\n'
             print(f"{new_purchase_name}, действительно новый товар -- добавляем его в базу")
             cur.execute('INSERT INTO list001 (name) VALUES (?)', (new_purchase_name,))
             added_purchase_id = cur.execute('SELECT id FROM list001 WHERE name IS ?', (new_purchase_name,)).fetchall()[0][0]  # Тип данных индекса: int
@@ -22,14 +22,19 @@ async def sql_add_command(purchases_for_add, is_clearing):
             existing_purchases_ids_list.append(existing_purchase_data[0][0])
         print(f'added_purchases_ids_list: {added_purchases_ids_list}')
     if not is_clearing and added_purchases_ids_list:
+        print(map(str, added_purchases_ids_list))
+        purchases_ids_str = ','.join(map(str, added_purchases_ids_list))
+        print(f'purchases_ids_str: {purchases_ids_str}')
         id_list_of_ids_got_by_lastrowid = cur.execute('INSERT INTO list001 (comment) VALUES (?)',
-                                                      (str(added_purchases_ids_list),)).lastrowid
+                                                      (purchases_ids_str,)).lastrowid
         print(f'id_list_of_ids_got_by_lastrowid: {id_list_of_ids_got_by_lastrowid}')
         id_list_of_ids = cur.execute('SELECT id FROM list001 WHERE comment IS ?',
-                                     (str(added_purchases_ids_list),)).fetchall()[0][0]
+                                     (purchases_ids_str,)).fetchall()[0][0]
         print(f'id_list_of_ids, got by SELECT WHERE comment IS...: {id_list_of_ids}')
     base.commit()
-    return [id_list_of_ids, existing_purchases_ids_list, text]  # Возвращаем индекс, под которым хранятся индексы добавленных покупок
+    print('___ sql_add_command ____FINISH')
+    # Возвращаем индекс, под которым хранятся индексы добавленных покупок:
+    return [id_list_of_ids, existing_purchases_ids_list, new_purchases_text]
 
 
 async def sql_read_list_of_purchases():
@@ -74,7 +79,7 @@ async def make_text_and_count_of_list_for_category(category_id, specific_purchas
 
 
 async def sql_make_text_of_list_by_categories(used_categories_ids, purchases_ids_list=[]):
-    print('sql_make_text_of_list_by_categories')
+    print('___ sql_make_text_of_list_by_categories ____START')
     text = ''
     categories_length = len(used_categories_ids)
     counter = 1
@@ -96,6 +101,7 @@ async def sql_make_text_of_list_by_categories(used_categories_ids, purchases_ids
         if counter != categories_length:
             text = text + '\n'
         counter += 1
+    print('___ sql_make_text_of_list_by_categories ____FINISH')
     return text
 
 
