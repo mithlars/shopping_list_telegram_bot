@@ -6,7 +6,6 @@ cur = base.cursor()
 
 
 def sql_start():
-
     base.execute('CREATE TABLE IF NOT EXISTS list001 ('
                  'id INTEGER PRIMARY KEY AUTOINCREMENT,'
                  'name VARCHAR(50),'
@@ -34,23 +33,24 @@ def sql_start():
         return False
 
 
-async def make_text_from_select(data, counter_starts_from):
-    print(data)
+async def make_text_from_select(data, counter_starts_from, exceptions_ids=[]):
     if data[0][1] == "The list is empty.":
         return 'The list is empty.'
     else:
         text = ""
         counter = counter_starts_from
         i = 1
-        for purchase in data:
-            name = purchase[1]
-            comment = purchase[2]
-            if comment is None:
-                comment = ""
-            text = text + f"{str(counter)} {name}         {comment}"
-            if i != len(data):
-                text = text + "\n"
-            counter += 1
-            i += 1
+        for item in data:
+            item_id = item[0]
+            if item_id not in exceptions_ids:
+                item_name = item[1]
+                item_comment = item[2]
+                if item_comment is None:
+                    item_comment = ""
+                text = text + f"{str(counter)}. {item_name}         {item_comment}"
+                if i != len(data):
+                    text = text + "\n"
+                counter += 1
+                i += 1
         return text
 

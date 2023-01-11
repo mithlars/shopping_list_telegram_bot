@@ -82,22 +82,28 @@ async def categorize_all_list(message, id_of_list_of_purchases_ids, new_purchase
     purchases_ids_str = cur.execute('SELECT comment FROM list001 WHERE id IS ?',
                                 (id_of_list_of_purchases_ids,)).fetchall()[0][0]
     purchases_ids_list = purchases_ids_str.split(',')
-    categorize_keyboard = await make_categorize_keyboard(id_of_list_of_purchases_ids)
     print(f'purchases_ids_list: {purchases_ids_list}')
     if purchases_ids_list[-1] == '-50':
+        dif_button = False
         categorizable_purchase_id = purchases_ids_list[0]
         categorizable_purchase_name = cur.execute("SELECT name FROM list001 WHERE id IS ?",
-                                              (categorizable_purchase_id,)).fetchall()[0][0]
+                                                  (categorizable_purchase_id,)).fetchall()[0][0]
         message_text = f'Выберите категорию для товара\n{categorizable_purchase_name}'
-        categorize_keyboard["inline_keyboard"].pop(-1)  # Удаляем из клавиатуры кнопку "Разные категории"
-        print(f'categorize_keyboard:'); i = 1
-        for key in categorize_keyboard["inline_keyboard"][0]: print(f'key{i}: {key}'); i += 1
     else:
         if len(purchases_ids_list) == 1:
-            categorize_keyboard["inline_keyboard"].pop(-1)  # Удаляем из клавиатуры кнопку "Разные категории"
+            dif_button = False
             message_text = 'Выберите категорию для товара:\n' + new_purchases_text
         else:
+            dif_button = True
             message_text = 'Выберите категорию для товаров:\n' + new_purchases_text
+
+    categorize_keyboard = await make_categorize_keyboard(id_of_list_of_purchases_ids, dif_button=dif_button)
+    print(f'categorize_keyboard:')
+    i = 1
+    for key in categorize_keyboard["inline_keyboard"][0]:
+        print(f'key{i}: {key}')
+        i += 1
+
     print(f'message_text:\n{message_text}')
     if message.chat != 'test':  # Строчка для теста, чтобы тест не спотыкался о то, что ет атрибута chat
         await bot.send_message(message.chat.id, message_text, reply_markup=categorize_keyboard)

@@ -8,19 +8,18 @@ categories_b1 = KeyboardButton(text='Добавить кат.')
 categories_b2 = KeyboardButton(text='Удалить кат.')
 categories_b3 = KeyboardButton(text='Изменить кат.')
 categories_b4 = KeyboardButton(text='Обновить кат.')
-categories_b5 = KeyboardButton(text='Группы')
+# categories_b5 = KeyboardButton(text='Группы')
 categories_b6 = KeyboardButton(text='Покупки')
-categories_b7 = KeyboardButton(text='Из группы')
-categories_b8 = KeyboardButton(text='В группу')
+# categories_b7 = KeyboardButton(text='Из группы')
+# categories_b8 = KeyboardButton(text='В группу')
 categories_kb \
     .insert(categories_b1) \
     .insert(categories_b2) \
     .insert(categories_b3) \
     .insert(categories_b4) \
-    .insert(categories_b5) \
     .insert(categories_b6) \
-    .insert(categories_b7) \
-    .insert(categories_b8)
+    # .insert(categories_b7) \
+    # .insert(categories_b8)
 
 
 
@@ -38,7 +37,7 @@ stop_kb_for_upd \
     .insert(stop_kb_for_upd2)
 
 
-async def make_categorize_keyboard(id_list_of_ids, command_text='categorize '):
+async def make_categorize_keyboard(id_list_of_ids, command_text='categorize ', dif_button=False):
     categories = await sql_read_categories()
     categorize_keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=3)
     for category in categories:
@@ -49,8 +48,25 @@ async def make_categorize_keyboard(id_list_of_ids, command_text='categorize '):
         categorize_keyboard.insert(button)
     kb_command = f'{command_text}{id_list_of_ids} -1'
     categorize_keyboard.insert(InlineKeyboardButton(text='Без категории', callback_data=kb_command))
-    different_button_command = f'dif_categorize {id_list_of_ids}'
-    categorize_keyboard.insert(InlineKeyboardButton(text='Разные категории', callback_data=different_button_command))
+    if dif_button:
+        different_button_command = f'dif_categorize {id_list_of_ids}'
+        categorize_keyboard.insert(InlineKeyboardButton(text='Разные категории', callback_data=different_button_command))
+    return categorize_keyboard
+
+
+async def make_from_which_category_keyboard(command_text, exceptions_ids=[]):
+    categories = await sql_read_categories()
+    categorize_keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=8)
+    count = 1
+    for category in categories:
+        category_id = category[0]
+        category_name = category[1]
+        if category_id not in exceptions_ids:
+            button_text = f'{count}'
+            count += 1
+            button_command = f'{command_text}{category_id}'
+            button = InlineKeyboardButton(text=button_text, callback_data=button_command)
+            categorize_keyboard.insert(button)
     return categorize_keyboard
 
 

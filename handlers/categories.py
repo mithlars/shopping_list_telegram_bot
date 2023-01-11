@@ -23,7 +23,7 @@ async def list_for_delete_som_category(message: types.Message):
     if categories_text == 'The list is empty.':
         await bot.send_message(message.chat.id, 'Список категорий пуст.', reply_markup=categories_kb)
     else:
-        exceptions_list = await make_categories_delete_exceptions_list(data)
+        exceptions_list = await make_used_categories_ids_list(data)
         delete_keyboard_buttons_and_counter = await make_inline_keyboard_and_buttons_list(data, 'category_remove ', exceptions_list, 1)
         delete_keyboard = delete_keyboard_buttons_and_counter['keyboard']
         delete_keyboard_buttons_counter = delete_keyboard_buttons_and_counter['buttons_counter']
@@ -89,6 +89,17 @@ async def categorize(callback: types.CallbackQuery):
     print('\ncategorize ____FINISH\n***********************************\n')
 
 
+async def uncategorize(callback: types.CallbackQuery):
+    ids_list = callback.data.replace('uncategorize ', '').split(' ')
+    category_id = ids_list[0]
+    category_name = cur.execute('SELECT name FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
+    purchase_id = ids_list[1]
+    purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
+    await sql_categorize_or_uncategorize_current_purchase(category_id, purchase_id, uncategorize=True)
+    await bot.send_message(callback.message.chat.id, f'Была удалена связь товара {purchase_name} с категорией {category_name}.')
+    await read_list_of_purchases(callback.message, [])
+
+
 def register_handlers_categories(dp: Dispatcher):
     dp.register_message_handler(list_of_categories, Text(equals='Категории', ignore_case=True))
     dp.register_message_handler(list_of_categories, Text(equals='Обновить кат.', ignore_case=True))
@@ -98,4 +109,6 @@ def register_handlers_categories(dp: Dispatcher):
 
     dp.register_callback_query_handler(categorize, Text(startswith='categorize '))
     dp.register_callback_query_handler(dif_categorize, Text(startswith='dif_categorize '))
+
+    dp.register_callback_query_handler(uncategorize, Text(startswith='uncategorize '))
 

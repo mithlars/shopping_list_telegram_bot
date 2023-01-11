@@ -1,8 +1,8 @@
 from data_base.sql_main import *
 
 
-async def make_categories_delete_exceptions_list(categories_data):
-    result = []
+async def make_used_categories_ids_list(categories_data):
+    used_categories_ids_list = []
     used_categories_ids_lists = cur.execute('SELECT DISTINCT category_id FROM link_categories_and_purchases').fetchall()
     used_categories_ids = []
     for category_list in used_categories_ids_lists:
@@ -10,14 +10,15 @@ async def make_categories_delete_exceptions_list(categories_data):
             used_categories_ids.append(category_list[0])
     for category in categories_data:
         if category[0] in used_categories_ids:
-            result.append(category[0])
-    return result
+            used_categories_ids_list.append(category[0])
+    return used_categories_ids_list
 
 
 async def sql_categorize(id_of_list_of_purchases_ids, category_id):
-    print('\n***********************************\nid_of_list_of_purchases_ids ____START\n')
+    print('\n___ sql_categorize ____START\n')
     print('sql_categorize')
     print(f'category_id: {category_id}')
+    print(f'id_of_list_of_purchases_ids: {id_of_list_of_purchases_ids}')
     purchases_ids_str = cur.execute('SELECT comment FROM list001 WHERE id IS ?',
                                     (str(id_of_list_of_purchases_ids),)).fetchall()[0][0]
     purchases_ids_list = purchases_ids_str.split(",")
@@ -29,20 +30,21 @@ async def sql_categorize(id_of_list_of_purchases_ids, category_id):
             cur.execute("DELETE from link_categories_and_purchases WHERE category_id='-1' AND purchase_id=?",
                         (purchase_id,))
         del purchases_ids_list[0]
-        print(f'purchases_ids_list:\npurchases_ids_list')
+        print(f'purchases_ids_list:\n{purchases_ids_list}')
         if len(purchases_ids_list) > 1:
             purchase_id = purchases_ids_list[0]
+            print(f'purchase_id: {purchase_id}')
             purchase_name = cur.execute("SELECT name FROM list001 WHERE id IS ?",
                                         (purchase_id,)).fetchall()[0][0]
             purchases_ids_string = ','.join(map(str, purchases_ids_list))
             cur.execute('UPDATE list001 SET comment=? WHERE id=?', (purchases_ids_string, id_of_list_of_purchases_ids))
             base.commit()
-            print('\nid_of_list_of_purchases_ids ____FINISH\n***********************************\n')
+            print('\n___ sql_categorize ____FINISH\n')
             return purchase_name
         else:
             cur.execute('DELETE FROM list001 WHERE id IS ?', (str(id_of_list_of_purchases_ids),))
             base.commit()
-            print('\nid_of_list_of_purchases_ids ____FINISH\n***********************************\n')
+            print('\n___ sql_categorize ____FINISH\n')
             return ''
 
     else:
@@ -57,8 +59,37 @@ async def sql_categorize(id_of_list_of_purchases_ids, category_id):
                 cur.execute("""DELETE FROM link_categories_and_purchases WHERE category_id='-1' and purchase_id=?""",
                             (int(purchase_id),))
         base.commit()
-        print('\nid_of_list_of_purchases_ids ____FINISH\n***********************************\n')
+        print('\n___ sql_categorize ____FINISH\n')
         return ''
+
+
+async def sql_categorize_or_uncategorize_current_purchase(category_id, purchase_id, uncategorize=False):
+    """
+    Функция выполняет SQL запрос для добавления связи между товаром и категорией.
+    При значении параметра uncategorize=True функция напротив удаляет связь товара и категории.
+    При отсутствии какой-нибудь другой связи кроме удаляемой -- назначается связь с категорией "Без категории"
+    :param category_id: id категории
+    :param purchase_id: id товара
+    :param uncategorize: направление действия функции (добавление или удаление связи товара с категорией)
+    """
+    print('\n___ sql_categorize_or_uncategorize_current_purchase ____START\n')
+    if uncategorize:
+        cur.execute('DELETE FROM link_categories_and_purchases WHERE category_id=? AND purchase_id=?',
+                    (category_id, purchase_id))
+        cur.execute('INSERT INTO link_categories_and_purchases (category_id, purchase_id) '
+                    'SELECT ?, ? WHERE NOT EXISTS (SELECT category_id, purchase_id FROM link_categories_and_purchases '
+                    'WHERE purchase_id=?)',
+                    (-1, purchase_id,
+                     purchase_id))
+    else:
+        cur.execute('INSERT INTO link_categories_and_purchases (category_id, purchase_id) '
+                    'SELECT ?, ? WHERE NOT EXISTS (SELECT category_id, purchase_id FROM link_categories_and_purchases '
+                    'WHERE category_id=? AND purchase_id=?)',
+                    (category_id, purchase_id,
+                     category_id, purchase_id))
+        cur.execute('DELETE FROM link_categories_and_purchases WHERE category_id="-1" AND purchase_id=?', (purchase_id,))
+    base.commit()
+    print('\n___ sql_categorize_or_uncategorize_current_purchase ____FINISH\n')
 
 
 async def sql_get_categories_ids_for_purchase(purchase_id):
@@ -127,7 +158,7 @@ async def sql_read_category(category_id):
 
 async def sql_delete_category(category_id):
     categories_data = await sql_read_categories()
-    exceptions_list = await make_categories_delete_exceptions_list(categories_data)
+    exceptions_list = await make_used_categories_ids_list(categories_data)
     if category_id not in exceptions_list:
         cur.execute(f"""DELETE FROM categories WHERE id='{category_id}'""")
         base.commit()

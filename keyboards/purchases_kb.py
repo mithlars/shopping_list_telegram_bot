@@ -21,11 +21,11 @@ purchase_main_kb \
     .insert(main_b7)
 
 
-async def make_purchases_list_inline_keyboard(categories_ids, command_text):
+async def make_purchases_list_inline_keyboard(categories_ids_list, command_text):
     print('___ make_purchases_list_inline_keyboard ____START')
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=8)
     counter_starts_from = 1
-    for category_id in categories_ids:
+    for category_id in categories_ids_list:
         purchases_ids_data = cur.execute('SELECT purchase_id FROM link_categories_and_purchases WHERE category_id IS ?',
                                          (category_id,)).fetchall()
         keyboard_and_buttons_list = await make_inline_keyboard_and_buttons_list(
