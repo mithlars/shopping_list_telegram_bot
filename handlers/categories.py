@@ -104,21 +104,7 @@ async def sort_categories(message: types.Message):
     print('\n***********************************\nsort_categories ____START\n')
     categories_data = cur.execute("SELECT id, name, number FROM categories ORDER BY number").fetchall()
     print(f'categories_data:\n{categories_data}')
-    categories_sort_keyboard = InlineKeyboardMarkup()
-    for i in range(len(categories_data)):
-        category_id = categories_data[i][0]
-        print(f'category_id:  {category_id}')
-        category_name = categories_data[i][1]
-        print(f'category_name:  {category_name}')
-        if i != 0:
-            categories_sort_keyboard.add(
-                InlineKeyboardButton(f"{category_name} ⬆️",
-                                     callback_data=f"category_sorting_move {category_id} up"),)
-        if i != len(categories_data) - 1:
-            categories_sort_keyboard.insert(
-                InlineKeyboardButton(("⬇️" if i != 0 else f"{category_name}⬇️"),
-                                     callback_data=f"category_sorting_move {category_id} down"))
-        print(f'Button {i}: {categories_sort_keyboard["inline_keyboard"][-1][-1]["text"]}')
+    categories_sort_keyboard = await make_categories_sorting_inline_keyboard(categories_data)
     await bot.send_message(message.chat.id,
                            "Выберите действия для изменения сортировки категорий:",
                            reply_markup=categories_sort_keyboard
@@ -127,19 +113,25 @@ async def sort_categories(message: types.Message):
 
 
 async def categories_sorting_move_callback_move(callback_query: types.CallbackQuery):
+    categories_data = cur.execute("SELECT id, name, number FROM categories ORDER BY number").fetchall()
     category_id, direction = callback_query.data.split(" ")[1:]
     cur.execute("SELECT number FROM categories WHERE id=?", (category_id,))
     current_sort_number = cur.fetchone()[0]
     if direction == "up":
-        cur.execute("UPDATE categories SET number=number+1 WHERE number=?", (current_sort_number-1,))
+        if current_sort_number > 0:
+            cur.execute("UPDATE categories SET number=number+1 WHERE number=?", (current_sort_number-1,))
+            cur.execute("UPDATE categories SET number=? WHERE id=?", (current_sort_number - 1, category_id))
     else:
-        cur.execute("UPDATE categories SET number=number-1 WHERE number=?", (current_sort_number+1,))
-    cur.execute("UPDATE categories SET number=? WHERE id=?",
-                (current_sort_number + (-1 if direction == "up" else 1),
-                 category_id))
+        if current_sort_number < len(categories_data):
+            cur.execute("UPDATE categories SET number=number-1 WHERE number=?", (current_sort_number+1,))
+            cur.execute("UPDATE categories SET number=? WHERE id=?", (current_sort_number + 1, category_id))
     base.commit()
-    await bot.answer_callback_query(callback_query.id)
-    await sort_categories(callback_query.message)
+    print(f'categories_data:\n{categories_data}')
+    categories_data = cur.execute("SELECT id, name, number FROM categories ORDER BY number").fetchall()
+    categories_sort_keyboard = await make_categories_sorting_inline_keyboard(categories_data)
+    await bot.edit_message_reply_markup(callback_query.message.chat.id,
+                                        callback_query.message.message_id,
+                                        reply_markup=categories_sort_keyboard)
 
 
 def register_handlers_categories(dp: Dispatcher):

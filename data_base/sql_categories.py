@@ -204,10 +204,16 @@ async def sql_delete_category(category_id):
     categories_data = await sql_read_categories()
     exceptions_list = await make_used_categories_ids_list(categories_data)
     if category_id not in exceptions_list:
+        # Читаем номер сортировки категории перед удалением
+        category_number = cur.execute('SELECT number FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
+        # Удаляем категорию
         cur.execute(f"""DELETE FROM categories WHERE id='{category_id}'""")
+        # Изменяем поле number для всех категорий, у которых number больше, чем у удаленной категории на -1
+        categories_data = cur.execute('SELECT id FROM categories WHERE number > ?', (category_number,)).fetchall()
+        for category_data in categories_data:
+            next_category_id = category_data[0]
+            cur.execute('UPDATE categories SET number=number-1 WHERE id=?', (next_category_id,))
         base.commit()
         return True
     else:
         return False
-    # Перед удалением нужно проверить, действительно ли категория
-    # все еще свободна, возможно другой пользователь в это время ее уже занял

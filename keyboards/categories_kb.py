@@ -87,3 +87,24 @@ comment_for_category_for_upd \
     .insert(comment_for_category_for_upd_b1) \
     .insert(comment_for_category_for_upd_b2) \
     .insert(comment_for_category_for_upd_b3)
+
+
+async def make_categories_sorting_inline_keyboard(categories_data):
+    print('\n***********************************\nmake_categories_sorting_inline_keyboard ____START\n')
+    categories_sort_keyboard = InlineKeyboardMarkup()
+    for i in range(len(categories_data)):
+        category_id = categories_data[i][0]
+        print(f'category_id:  {category_id}')
+        category_name = categories_data[i][1]
+        print(f'category_name:  {category_name}')
+        if i != 0:
+            categories_sort_keyboard.add(
+                InlineKeyboardButton(f"⬆️ {category_name}",
+                                     callback_data=f"category_sorting_move {category_id} up"),)
+        if i != len(categories_data) - 1:
+            categories_sort_keyboard.insert(
+                InlineKeyboardButton(("⬇️" if i != 0 else f"{category_name}⬇️"),
+                                     callback_data=f"category_sorting_move {category_id} down"))
+        print(f'Button {i}: {categories_sort_keyboard["inline_keyboard"][-1][-1]["text"]}')
+    print('\nmake_categories_sorting_inline_keyboard ____FINISH\n***********************************\n')
+    return categories_sort_keyboard
