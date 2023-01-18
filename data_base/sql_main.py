@@ -17,9 +17,10 @@ def sql_start():
     base.execute('CREATE TABLE IF NOT EXISTS categories ('
                  'id INTEGER PRIMARY KEY AUTOINCREMENT, '
                  'name VARCHAR(50),'
-                 'description TEXT)')
-    cur.execute(""" INSERT INTO categories (id, name) 
-                    SELECT '-1', 'Без категории' 
+                 'description TEXT,'
+                 'number INTEGER)')
+    cur.execute(""" INSERT INTO categories (id, name, number) 
+                    SELECT '-1', 'Без категории' , '0'
                     WHERE NOT EXISTS (SELECT * FROM categories)""")
 
     base.execute('CREATE TABLE IF NOT EXISTS link_categories_and_purchases ('

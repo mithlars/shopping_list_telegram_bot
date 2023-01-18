@@ -106,6 +106,7 @@ async def categorize_all_list(message, id_of_list_of_purchases_ids, new_purchase
 
     print(f'message_text:\n{message_text}')
     if message.chat != 'test':  # Строчка для теста, чтобы тест не спотыкался о то, что ет атрибута chat
+        categorize_keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
         await bot.send_message(message.chat.id, message_text, reply_markup=categorize_keyboard)
     else:
         return categorize_keyboard, message_text

@@ -37,6 +37,7 @@ async def in_category_from_which_category(message: types.Message, test=False):
     keyboard.insert(InlineKeyboardButton(text=f'{count}', callback_data='in_category_which_purchase -1'))
     keyboard.add(InlineKeyboardButton(text='Все товары без категории',
                                       callback_data='categorize_all_single_purchases'))
+    keyboard.insert(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
     if test:
         return {'keyboard': keyboard, 'text': message_text}
     else:
@@ -55,6 +56,7 @@ async def out_of_category(message: types.message, test=False):
     message_text = 'Из какой категории Вы хотите удалить товар?\n'
     message_text += await make_text_from_select(categories_data, counter_starts_from=1)
     keyboard = await make_from_which_category_keyboard('out_of_category_which_purchase ')
+    keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
     if test:
         return {'keyboard': keyboard, 'text': message_text}
     else:
@@ -119,6 +121,7 @@ async def in_category_which_purchase(callback: types.CallbackQuery, test=False):
             'keyboard': keyboard
         }
     else:
+        keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
         await bot.send_message(callback.message.chat.id, message_text, reply_markup=keyboard)
 
 
@@ -146,6 +149,7 @@ async def out_of_category_which_purchase(callback: types.CallbackQuery, test=Fal
             'keyboard': keyboard
         }
     else:
+        keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
         await bot.send_message(callback.message.chat.id, message_text, reply_markup=keyboard)
 
 
@@ -171,6 +175,7 @@ async def in_category_in_which_category(callback: types.CallbackQuery, test=Fals
         return {'text': message_text,
                 'keyboard': keyboard}
     else:
+        keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
         await bot.send_message(callback.message.chat.id, message_text, reply_markup=keyboard)
 
 
@@ -212,6 +217,7 @@ async def in_category_categorize(callback: types.CallbackQuery, test=False):
             uncategorize_keyword.insert(InlineKeyboardButton(text='Удалить',
                                                              callback_data=f'uncategorize {prev_category_id} {purchase_id}'))
             uncategorize_keyword.insert(InlineKeyboardButton(text='Оставить', callback_data='in_category_finish'))
+            uncategorize_keyword.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
             await bot.send_message(callback.message.chat.id, message_text, reply_markup=uncategorize_keyword)
     print('\nin_category_categorize ____FINISH\n***********************************\n')
 

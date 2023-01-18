@@ -2,6 +2,7 @@ from data_base.sql_main import *
 
 
 async def make_used_categories_ids_list(categories_data):
+    print('Hello')
     used_categories_ids_list = []
     used_categories_ids_lists = cur.execute('SELECT DISTINCT category_id FROM link_categories_and_purchases').fetchall()
     used_categories_ids = []
@@ -11,7 +12,22 @@ async def make_used_categories_ids_list(categories_data):
     for category in categories_data:
         if category[0] in used_categories_ids:
             used_categories_ids_list.append(category[0])
-    return used_categories_ids_list
+    categories_data = cur.execute('SELECT id, number FROM categories').fetchall()
+    categories = {}
+    for category_data in categories_data:
+        categories[category_data[0]] = category_data[1]
+    print(f'categories:\n{categories}')
+    used_categories_ids_sorted_list = [-5] * len(categories)
+    print(f'used_categories_ids_sorted_list:\n{used_categories_ids_sorted_list}')
+    print(f'used_categories_ids:\n{used_categories_ids}')
+    for category_id in used_categories_ids:
+        category_number = categories[category_id]
+        print(f'category_number: {category_number}')
+        used_categories_ids_sorted_list[int(category_number)] = category_id
+        print(f'used_categories_ids_sorted_list:\n{used_categories_ids_sorted_list}')
+    while -5 in used_categories_ids_sorted_list:
+        used_categories_ids_sorted_list.remove(-5)
+    return used_categories_ids_sorted_list
 
 
 async def sql_categorize(id_of_list_of_purchases_ids, category_id):
@@ -102,7 +118,8 @@ async def sql_get_categories_ids_for_purchase(purchase_id):
 
 
 async def sql_add_category(name, description):
-    cur.execute('INSERT INTO categories (name, description) VALUES (?, ?)', (name, description))
+    categories_quantity = len(cur.execute('select * from categories').fetchall())
+    cur.execute('INSERT INTO categories (name, description, number) VALUES (?, ?, ?)', (name, description, categories_quantity))
     base.commit()
 
 
@@ -112,7 +129,7 @@ async def sql_update_category(category_id, name, description):
 
 
 async def sql_read_categories():
-    data = cur.execute('SELECT * FROM categories').fetchall()
+    data = cur.execute('SELECT * FROM categories ORDER BY number').fetchall()
     return data
 
 
@@ -147,8 +164,35 @@ async def sql_read_used_categories_ids(purchases_ids_list=[]):
             #             used_categories_ids.append(category_id_data[0])
             # else:
             used_categories_ids.append(category_id_data[0])
+    # categories_data = cur.execute('SELECT * FROM categories').fetchall()
+    # used_categories_ids_list = []
+    # for category in categories_data:
+    #     if category[0] in used_categories_ids:
+    #         used_categories_ids_list.append(category[0])
+    categories_data = cur.execute('SELECT id, number FROM categories').fetchall()
+    categories = {}
+    # Наполняем словарь с категориями (id: sort_number)
+    for category_data in categories_data:
+        category_id = category_data[0]
+        category_sort_number = category_data[1]
+        categories[category_id] = category_sort_number
+    print(f'categories dict with ids and numbers:\n{categories}')
+    # Создаем список, в который будем добавлять id категорий, используя номер сортировки как индекс
+    # наполняем его значениями "-5", чтобы сохранилась сортировка при наполнении списка id категорий
+    used_categories_ids_sorted_list = [-5] * len(categories)
+    print(f'used_categories_ids_sorted_list:\n{used_categories_ids_sorted_list}')
+    print(f'used_categories_ids:\n{used_categories_ids}')
+    # Наполняем список категориями
+    for category_id in used_categories_ids:
+        category_number = categories[category_id]
+        print(f'category_number: {category_number}')
+        used_categories_ids_sorted_list[int(category_number)] = category_id
+        print(f'used_categories_ids_sorted_list:\n{used_categories_ids_sorted_list}')
+    # Удаляем из списка элементы, наполненные служебным значением "-5"
+    while -5 in used_categories_ids_sorted_list:
+        used_categories_ids_sorted_list.remove(-5)
     print('___ sql_read_used_categories_ids ____FINISH')
-    return used_categories_ids
+    return used_categories_ids_sorted_list
 
 
 async def sql_read_category(category_id):

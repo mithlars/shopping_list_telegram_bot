@@ -12,14 +12,15 @@ categories_b4 = KeyboardButton(text='Обновить кат.')
 categories_b6 = KeyboardButton(text='Покупки')
 # categories_b7 = KeyboardButton(text='Из группы')
 # categories_b8 = KeyboardButton(text='В группу')
+categories_b9 = KeyboardButton(text='Сортировка категорий')
 categories_kb \
     .insert(categories_b1) \
     .insert(categories_b2) \
     .insert(categories_b3) \
     .insert(categories_b4) \
-    .insert(categories_b6) \
-    # .insert(categories_b7) \
-    # .insert(categories_b8)
+    .insert(categories_b9) \
+    .insert(categories_b6)
+    # .insert(categories_b7)  # .insert(categories_b8)
 
 
 
