@@ -39,7 +39,7 @@ async def read_list_of_purchases(message: types.Message, purchases_ids_list=[]):
             await bot.send_message(message.chat.id, text)
         else:
             await bot.send_message(message.chat.id, 'Актуальный список покупок:', reply_markup=purchase_main_kb)
-            await bot.send_message(message.chat.id, text, reply_markup=delete_keyboard_inline)
+            await bot.send_message(message.chat.id, text, reply_markup=delete_keyboard_inline, parse_mode="HTML")
     print('___ read_list_of_purchases ____FINISH')
 
 

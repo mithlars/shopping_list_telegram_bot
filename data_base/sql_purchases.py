@@ -62,19 +62,28 @@ async def make_text_and_count_of_list_for_category(category_id, specific_purchas
                 purchases_ids_list.append(purchase_id_data[0])
         else:
             purchases_ids_list.append(purchase_id_data[0])
-
-    text = ''
-    counter_row_text = counter_starts_from
-    counter = 1
+    # Сортируем список id по алфавиту по полю имя
+    print(f'purchases_ids_list\n{purchases_ids_list}')
+    purchases_dict = {}
     for purchase_id in purchases_ids_list:
         purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
-        text += f'{counter_row_text}. {purchase_name}'
-        if counter != len(purchases_ids_list):
+        purchases_dict[purchase_name] = purchase_id
+    print(f'purchases_dict:\n{purchases_dict}')
+    purchases_ids_sorted_list = list(dict(sorted(purchases_dict.items())).values())
+    print(f'purchases_ids_sorted_list:\n{purchases_ids_sorted_list}')
+    # Создание текста со списком товаров из заданной категории
+    text = ''
+    row_counter = counter_starts_from
+    counter = 1
+    for purchase_id in purchases_ids_sorted_list:
+        purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
+        text += f'{row_counter}. {purchase_name}'
+        if counter != len(purchases_ids_sorted_list):
             text += '\n'
             counter += 1
-            counter_row_text += 1
+            row_counter += 1
     text_and_count.update({'text': text})
-    text_and_count.update({'count': len(purchases_ids_list)})
+    text_and_count.update({'count': len(purchases_ids_sorted_list)})
     return text_and_count
 
 
@@ -96,7 +105,7 @@ async def sql_make_text_of_list_by_categories(used_categories_ids, purchases_ids
             category_id, purchases_ids_list, counter_starts_from)
         counter_starts_from += text_and_count_of_list_for_category['count']
         if text_and_count_of_list_for_category['text'] != '':
-            text += f'____ {str(category)} ______________\n'
+            text += f'____ <b>{str(category)}</b> \n'
             text += text_and_count_of_list_for_category['text']
         if counter != categories_length:
             text = text + '\n'
