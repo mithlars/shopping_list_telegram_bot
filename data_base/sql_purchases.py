@@ -48,12 +48,11 @@ async def sql_read_purchase(purchase_id):
 
 
 async def make_text_and_count_of_list_for_category(category_id, specific_purchases_ids_list, counter_starts_from):
-    purchases_ids_data = cur.execute('SELECT purchase_id FROM link_categories_and_purchases WHERE category_id IS ?',
-                                     (category_id,))
-    # if purchases_ids_list:
-    #     for purchase_id_data in purchases_ids_data:
-    #         if purchase_id_data not in purchases_ids_list:
-    #
+    # purchases_ids_data = cur.execute('SELECT purchase_id FROM link_categories_and_purchases WHERE category_id IS ?',
+    #                                  (category_id,))
+    request = 'SELECT link.purchase_id FROM link_categories_and_purchases link, list001 ' \
+              'WHERE link.purchase_id=list001.id AND link.category_id=? ORDER BY list001.name;'
+    purchases_ids_data = cur.execute(request, (category_id,)).fetchall()
     text_and_count = {}
     purchases_ids_list = []
     for purchase_id_data in purchases_ids_data:
@@ -62,28 +61,18 @@ async def make_text_and_count_of_list_for_category(category_id, specific_purchas
                 purchases_ids_list.append(purchase_id_data[0])
         else:
             purchases_ids_list.append(purchase_id_data[0])
-    # Сортируем список id по алфавиту по полю имя
-    print(f'purchases_ids_list\n{purchases_ids_list}')
-    purchases_dict = {}
-    for purchase_id in purchases_ids_list:
-        purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
-        purchases_dict[purchase_name] = purchase_id
-    print(f'purchases_dict:\n{purchases_dict}')
-    purchases_ids_sorted_list = list(dict(sorted(purchases_dict.items())).values())
-    print(f'purchases_ids_sorted_list:\n{purchases_ids_sorted_list}')
-    # Создание текста со списком товаров из заданной категории
     text = ''
     row_counter = counter_starts_from
     counter = 1
-    for purchase_id in purchases_ids_sorted_list:
+    for purchase_id in purchases_ids_list:
         purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
         text += f'{row_counter}. {purchase_name}'
-        if counter != len(purchases_ids_sorted_list):
+        if counter != len(purchases_ids_list):
             text += '\n'
             counter += 1
             row_counter += 1
     text_and_count.update({'text': text})
-    text_and_count.update({'count': len(purchases_ids_sorted_list)})
+    text_and_count.update({'count': len(purchases_ids_list)})
     return text_and_count
 
 
@@ -99,8 +88,6 @@ async def sql_make_text_of_list_by_categories(used_categories_ids, purchases_ids
             category = cur.execute('SELECT name FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
         else:
             category = 'Без категории'
-        # text = text + '____ ' + str(category) + ' ______________' + '\n'
-
         text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(
             category_id, purchases_ids_list, counter_starts_from)
         counter_starts_from += text_and_count_of_list_for_category['count']

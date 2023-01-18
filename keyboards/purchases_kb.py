@@ -26,8 +26,9 @@ async def make_purchases_list_inline_keyboard(categories_ids_list, command_text)
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=8)
     counter_starts_from = 1
     for category_id in categories_ids_list:
-        purchases_ids_data = cur.execute('SELECT purchase_id FROM link_categories_and_purchases WHERE category_id IS ?',
-                                         (category_id,)).fetchall()
+        request = 'SELECT link.purchase_id FROM link_categories_and_purchases link, list001 ' \
+                  'WHERE link.purchase_id=list001.id AND link.category_id=? ORDER BY list001.name;'
+        purchases_ids_data = cur.execute(request, (category_id,)).fetchall()
         keyboard_and_buttons_list = await make_inline_keyboard_and_buttons_list(
             purchases_ids_data, command_text, [], counter_starts_from)
         buttons_list = keyboard_and_buttons_list['buttons_list']

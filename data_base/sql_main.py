@@ -55,3 +55,4 @@ async def make_text_from_select(data, counter_starts_from, exceptions_ids=[]):
                 i += 1
         return text
 
+
