@@ -77,7 +77,7 @@ async def ok(callback: types.CallbackQuery):
     await callback.message.answer(text='OK', reply_markup=purchase_main_kb)
 
 
-async def categorize_all_list(message, id_of_list_of_purchases_ids, new_purchases_text):
+async def categorize_all_list(message, id_of_list_of_purchases_ids, new_purchases_text, in_category=False):
     print('\n***********************************\ncategorize_all_list ____START\n')
     purchases_ids_str = cur.execute('SELECT comment FROM list001 WHERE id IS ?',
                                 (id_of_list_of_purchases_ids,)).fetchall()[0][0]
@@ -106,7 +106,9 @@ async def categorize_all_list(message, id_of_list_of_purchases_ids, new_purchase
 
     print(f'message_text:\n{message_text}')
     if message.chat != 'test':  # Строчка для теста, чтобы тест не спотыкался о то, что ет атрибута chat
-        categorize_keyboard.add(InlineKeyboardButton(text='Отмена', callback_data=f'cancel_adding_purchases {id_of_list_of_purchases_ids}'))
+        if not in_category:
+            categorize_keyboard.add(
+                InlineKeyboardButton(text='Отмена', callback_data=f'cancel_adding_purchases {id_of_list_of_purchases_ids}'))
         await bot.send_message(message.chat.id, 'Выберите категорию для товара', reply_markup=purchase_main_kb)
         await bot.send_message(message.chat.id, message_text, reply_markup=categorize_keyboard)
     else:

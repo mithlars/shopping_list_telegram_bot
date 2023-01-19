@@ -47,8 +47,8 @@ async def make_categorize_keyboard(id_list_of_ids, command_text='categorize ', d
         button_command = command_text + str(id_list_of_ids) + ' ' + str(category_id)
         button = InlineKeyboardButton(text=button_text, callback_data=button_command)
         categorize_keyboard.insert(button)
-    kb_command = f'{command_text}{id_list_of_ids} -1'
-    categorize_keyboard.insert(InlineKeyboardButton(text='Без категории', callback_data=kb_command))
+    # kb_command = f'{command_text}{id_list_of_ids} -1'
+    # categorize_keyboard.insert(InlineKeyboardButton(text='Без категории', callback_data=kb_command))
     if dif_button:
         different_button_command = f'dif_categorize {id_list_of_ids}'
         categorize_keyboard.insert(InlineKeyboardButton(text='Разные категории', callback_data=different_button_command))

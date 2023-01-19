@@ -95,7 +95,10 @@ async def categorize_all_single(callback: types.CallbackQuery, test=False):
                 'id_list_of_uncategorized_purchases_ids': str(id_list_of_uncategorized_purchases_ids),
                 'uncategorized_purchases_text': uncategorized_purchases_text}
     else:
-        await categorize_all_list(callback.message, id_list_of_uncategorized_purchases_ids, uncategorized_purchases_text)
+        await categorize_all_list(callback.message,
+                                  id_list_of_uncategorized_purchases_ids,
+                                  uncategorized_purchases_text,
+                                  in_category=True)
 
 
 async def in_category_which_purchase(callback: types.CallbackQuery, test=False):
