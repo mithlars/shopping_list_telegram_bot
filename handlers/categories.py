@@ -136,6 +136,7 @@ async def categories_sorting_move_callback_move(callback_query: types.CallbackQu
 
 def register_handlers_categories(dp: Dispatcher):
     dp.register_message_handler(list_of_categories, Text(equals='Категории', ignore_case=True))
+    dp.register_message_handler(list_of_categories, Text(equals='📁', ignore_case=True))
     dp.register_message_handler(list_of_categories, Text(equals='Обновить кат.', ignore_case=True))
 
     dp.register_message_handler(list_for_delete_som_category, Text(equals='Удалить кат.', ignore_case=True))

@@ -252,6 +252,7 @@ async def out_of_category_finish(callback: types.CallbackQuery, test=False):
 
 def register_handlers_category_in_out(dp: Dispatcher):
     dp.register_message_handler(in_category_from_which_category, Text(startswith='В категорию'))
+    dp.register_message_handler(in_category_from_which_category, Text(startswith='➡️📁'))
     dp.register_callback_query_handler(categorize_all_single, Text(equals='categorize_all_single_purchases'))
     dp.register_callback_query_handler(in_category_which_purchase, Text(startswith='in_category_which_purchase '))
     dp.register_callback_query_handler(in_category_in_which_category, Text(startswith='in_category_in_which_category '))
@@ -259,5 +260,6 @@ def register_handlers_category_in_out(dp: Dispatcher):
     dp.register_callback_query_handler(in_category_finish, Text(equals='in_category_finish'))
 
     dp.register_message_handler(out_of_category, Text(equals='Из категории'))
+    dp.register_message_handler(out_of_category, Text(equals='⬅️📁'))
     dp.register_callback_query_handler(out_of_category_which_purchase, Text(startswith='out_of_category_which_purchase'))
     dp.register_callback_query_handler(out_of_category_finish, Text(startswith='out_of_category_finish '))

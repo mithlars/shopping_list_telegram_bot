@@ -3,22 +3,29 @@ from data_base.sql_main import cur
 from keyboards.shared_kb import make_inline_keyboard_and_buttons_list
 
 
-purchase_main_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=4)
-main_b1 = KeyboardButton(text='Помощь')
-main_b2 = KeyboardButton(text='Список')
-main_b3 = KeyboardButton(text='Очистить')
-main_b4 = KeyboardButton(text='Изменить')
-main_b5 = KeyboardButton(text='Категории')
+purchase_main_kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=7)
+# main_b1 = KeyboardButton(text='Помощь')
+main_b1 = KeyboardButton(text='❓')
+# main_b2 = KeyboardButton(text='Список')
+main_b2 = KeyboardButton(text='📜')
+# main_b3 = KeyboardButton(text='Очистить')
+main_b3 = KeyboardButton(text='🧹')
+# main_b4 = KeyboardButton(text='Изменить')
+main_b4 = KeyboardButton(text='✏️')
+main_b5 = KeyboardButton(text='📁')
+# main_b5 = KeyboardButton(text='Категории')
 main_b6 = KeyboardButton(text='Из категории')
-main_b7 = KeyboardButton(text='В категорию')
+main_b6 = KeyboardButton(text='⬅️📁')
+# main_b7 = KeyboardButton(text='В категорию')
+main_b7 = KeyboardButton(text='➡️📁')
 purchase_main_kb \
-    .insert(main_b1) \
     .insert(main_b2) \
     .insert(main_b3) \
     .insert(main_b4) \
     .insert(main_b5) \
     .insert(main_b6) \
     .insert(main_b7)
+# .insert(main_b1)
 
 
 async def make_purchases_list_inline_keyboard(categories_ids_list, command_text):

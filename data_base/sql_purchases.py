@@ -48,8 +48,6 @@ async def sql_read_purchase(purchase_id):
 
 
 async def make_text_and_count_of_list_for_category(category_id, specific_purchases_ids_list, counter_starts_from):
-    # purchases_ids_data = cur.execute('SELECT purchase_id FROM link_categories_and_purchases WHERE category_id IS ?',
-    #                                  (category_id,))
     request = 'SELECT link.purchase_id FROM link_categories_and_purchases link, list001 ' \
               'WHERE link.purchase_id=list001.id AND link.category_id=? ORDER BY list001.name;'
     purchases_ids_data = cur.execute(request, (category_id,)).fetchall()

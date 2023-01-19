@@ -71,6 +71,7 @@ async def getting_new_name_for_purchase(message: types.Message, state: FSMPurcha
 def register_handlers_purchase_changing(dp: Dispatcher):
 
     dp.register_message_handler(update_som_purchase, Text(equals='Изменить'))
+    dp.register_message_handler(update_som_purchase, Text(equals='✏️'))
     dp.register_callback_query_handler(update_current_purchase, Text(startswith='update_current_purchase '), state=None)
     dp.register_message_handler(state_cancel_handler, Text(equals='Отмена пок.'), state='*')
     dp.register_message_handler(getting_new_name_for_purchase, state=FSMPurchase.name)
