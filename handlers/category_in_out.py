@@ -173,7 +173,6 @@ async def in_category_which_purchase(message: types.Message, test=False):
 
     if test:
         return {
-            'category_id': category_id,
             'message_text': message_text,
             'keyboard': keyboard
         }

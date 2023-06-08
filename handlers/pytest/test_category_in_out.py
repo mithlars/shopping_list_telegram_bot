@@ -124,27 +124,6 @@ async def test_categorize_all_single():
     sql_clean()
 
 
-# OK
-@pytest.mark.asyncio
-async def test_in_category_which_purchase():
-    sql_start()
-    sql_prepare()
-    callback_query = types.CallbackQuery()
-    callback_query.data = f'in_category_which_purchase {test_categories_ids[0]}'
-    returned = await in_category_which_purchase(callback_query, test=True)
-    print('\n\nreturned:\n')
-    for element in returned:
-        if element != 'keyboard':
-            print(f'{element}:\n{returned[element]}\n')
-        else:
-            print(f'{element}:\n')
-            count = 1
-            for key in returned[element]['inline_keyboard'][0]:
-                print(f'key {count}: {key}')
-
-    sql_clean()
-
-
 @pytest.mark.asyncio
 async def test_in_category_which_purchase():
     sql_start()
@@ -164,7 +143,8 @@ async def test_in_category_which_purchase():
             print(returned['keyboard'])
             count = 1
             for key in returned['keyboard']['inline_keyboard'][0]:
-                print(f'key {count}: {key}')
+                print(f'Key {count}: {key}')
+                count += 1
 
     sql_clean()
 
