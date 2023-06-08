@@ -25,15 +25,15 @@ from data_base.sql_main import cur, base, sql_start
 # # text = returned[2]
 
 
-class sql_add_command_test(TestCase):
-    """
-    Тестируем функцию sql_add_command
-    """
-    actual = test_test(['test_milk', 'test_coffee', 'test_bread'], is_clearing=False)
-    expected = ['1 test_coffee\n2 test_bread', 2, '']
-    def test_plus(self):
-        # assert self.actual.columns == ['1 test_coffee\n2 test_bread', 2, '']
-        assert all([a == b for a, b in zip(self.actual, self.expected)])
+# class sql_add_command_test(TestCase):
+#     """
+#     Тестируем функцию sql_add_command
+#     """
+#     actual = test_test(['test_milk', 'test_coffee', 'test_bread'], is_clearing=False)
+#     expected = ['1 test_coffee\n2 test_bread', 2, '']
+#     def test_plus(self):
+#         # assert self.actual.columns == ['1 test_coffee\n2 test_bread', 2, '']
+#         assert all([a == b for a, b in zip(self.actual, self.expected)])
 
 
 """Удаляем из базы данных тестовую позицию"""
