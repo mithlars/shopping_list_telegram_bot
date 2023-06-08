@@ -44,7 +44,7 @@ async def list_for_delete_som_category(message: types.Message):
 async def delete_current_category_inline(callback: types.CallbackQuery):
     print('\n***********************************\ndelete_current_category_inline ____START\n')
     categories_count = len(await sql_read_categories())
-    category_id = callback.data.replace("category_remove ", "")              # print(f"Удаляем категорию под id: '{category_id}'")
+    category_id = callback.data.replace("category_remove ", "")  # print(f"Удаляем категорию под id: '{category_id}'")
     is_deleted = await sql_delete_category(category_id)
     if is_deleted:
         if categories_count == 1:
@@ -57,24 +57,15 @@ async def delete_current_category_inline(callback: types.CallbackQuery):
 
 async def dif_categorize(callback: types.CallbackQuery):
     id_of_list_of_purchases_ids = callback.data.replace('dif_categorize ', '')
-    purchases_ids_str = cur.execute('SELECT comment FROM list001 WHERE id IS ?',
+    purchases_ids_str = cur.execute('SELECT comment FROM items001 WHERE id IS ?',
                                 (id_of_list_of_purchases_ids,)).fetchall()[0][0]
-    # categorizable_purchase_id = purchases_ids_str.split(',')[0]
-    # categorizable_purchase_name = cur.execute("SELECT name FROM list001 WHERE id IS ?",
-    #                                           (categorizable_purchase_id,)).fetchall()[0][0]
     purchases_ids_str += ',-50'
-    cur.execute("UPDATE list001 SET comment=? WHERE id=?", (purchases_ids_str, id_of_list_of_purchases_ids))
+    cur.execute("UPDATE items001 SET comment=? WHERE id=?", (purchases_ids_str, id_of_list_of_purchases_ids))
     base.commit()
     if callback.message is not None:  # строчка для теста, чтобы тест не спотыкался о то, что ет атрибута chat
         await categorize_all_list(callback.message, id_of_list_of_purchases_ids, '')
-    # categorize_keyboard = await make_categorize_keyboard(id_of_list_of_purchases_ids)
-    # categorize_keyboard["inline_keyboard"].pop(-1)    # Удаляем из клавиатуры кнопку "Разные категории"
-    # message_text = 'Выберите категорию для товара:\n' + categorizable_purchase_name
-    # if callback.message is not None:  # строчка для теста, чтобы тест не спотыкался о то, что ет атрибута chat
-    #     await bot.send_message(callback.message.chat.id, message_text, reply_markup=categorize_keyboard)
 
 
-# Нужно изменить категоризирование так, чтобы можно было добавить несколько категорий для каждой покупки
 async def categorize(callback: types.CallbackQuery):
     print('\n***********************************\ncategorize ____START\n')
     print(callback.data)
@@ -94,7 +85,7 @@ async def uncategorize(callback: types.CallbackQuery):
     category_id = ids_list[0]
     category_name = cur.execute('SELECT name FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
     purchase_id = ids_list[1]
-    purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
+    purchase_name = cur.execute('SELECT name FROM items001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
     await sql_categorize_or_uncategorize_current_purchase(category_id, purchase_id, uncategorize=True)
     await bot.send_message(callback.message.chat.id, f'Была удалена связь товара {purchase_name} с категорией {category_name}.')
     await read_list_of_purchases(callback.message, [])

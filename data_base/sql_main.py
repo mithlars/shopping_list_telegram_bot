@@ -1,32 +1,43 @@
 import sqlite3
+import psycopg2
 
 
 base = sqlite3.connect('shopping_list.db')
 cur = base.cursor()
 
-
 def sql_start():
-    base.execute('CREATE TABLE IF NOT EXISTS list001 ('
+    base.execute('CREATE TABLE IF NOT EXISTS users ('
+                 'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+                 'user_telegram_id INTEGER UNIQUE,'
+                 'name VARCHAR(50),'
+                 'access_lists_ids TEXT,'
+                 'current_list_id INTEGER,'
+                 'reg_date DATETIME,'
+                 'last_visit_date DATETIME)')
+    base.execute('CREATE TABLE IF NOT EXISTS lists ('
                  'id INTEGER PRIMARY KEY AUTOINCREMENT,'
                  'name VARCHAR(50),'
-                 'comment TEXT)')
-    cur.execute(""" INSERT INTO list001 (id, name) 
+                 'description TEXT)')
+    base.execute('CREATE TABLE IF NOT EXISTS items001 ('
+                 'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+                 'name VARCHAR(50),'
+                 'comment TEXT,'
+                 'list_id INTEGER)')
+    cur.execute(""" INSERT INTO items001 (id, name) 
                     SELECT '0', 'The list is empty.' 
-                    WHERE NOT EXISTS (SELECT * FROM list001)""")
-
+                    WHERE NOT EXISTS (SELECT * FROM items001)""")
     base.execute('CREATE TABLE IF NOT EXISTS categories ('
                  'id INTEGER PRIMARY KEY AUTOINCREMENT, '
                  'name VARCHAR(50),'
                  'description TEXT,'
-                 'number INTEGER)')
+                 'number INTEGER,'
+                 'list_id INTEGER)')
     cur.execute(""" INSERT INTO categories (id, name, number) 
                     SELECT '-1', 'Без категории' , '0'
                     WHERE NOT EXISTS (SELECT * FROM categories)""")
-
     base.execute('CREATE TABLE IF NOT EXISTS link_categories_and_purchases ('
                  'category_id INTEGER, '
                  'purchase_id INTEGER)')
-
     base.commit()
     if base:
         return True

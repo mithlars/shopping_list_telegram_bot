@@ -28,13 +28,12 @@ purchase_main_kb \
 # .insert(main_b1)
 
 
-async def make_purchases_list_inline_keyboard(categories_ids_list, command_text):
+async def make_purchases_list_inline_keyboard(categories_ids_list, command_text, counter_starts_from = 1):
     print('___ make_purchases_list_inline_keyboard ____START')
     keyboard = InlineKeyboardMarkup(resize_keyboard=True, row_width=8)
-    counter_starts_from = 1
     for category_id in categories_ids_list:
-        request = 'SELECT link.purchase_id FROM link_categories_and_purchases link, list001 ' \
-                  'WHERE link.purchase_id=list001.id AND link.category_id=? ORDER BY list001.name;'
+        request = 'SELECT link.purchase_id FROM link_categories_and_purchases link, items001 ' \
+                  'WHERE link.purchase_id=items001.id AND link.category_id=? ORDER BY items001.name;'
         purchases_ids_data = cur.execute(request, (category_id,)).fetchall()
         keyboard_and_buttons_list = await make_inline_keyboard_and_buttons_list(
             purchases_ids_data, command_text, [], counter_starts_from)

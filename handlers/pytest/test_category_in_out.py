@@ -19,33 +19,35 @@ def sql_prepare():
     # Добавляем в Базу данных покупки из test_purchases и записываем их id в test_purchases_ids
     for purchase_name in test_purchases:
         cur.execute(
-            'INSERT INTO list001 (name) SELECT ? '
+            'INSERT INTO items001 (name) SELECT ? '
             'WHERE NOT EXISTS '
-            '(SELECT * FROM list001 WHERE name is ?)',
+            '(SELECT * FROM items001 WHERE name is ?)',
             (purchase_name, purchase_name))
-        purchase_id = cur.execute('SELECT id FROM list001 WHERE name is ?', (purchase_name,)).fetchall()[0][0]
+        purchase_id = cur.execute('SELECT id FROM items001 WHERE name is ?', (purchase_name,)).fetchall()[0][0]
         test_purchases_ids.append(purchase_id)
 
     # Добавляем в Базу данных покупки из test_purchases_uncategorized
     # и записываем их id в test_purchases_uncategorized_ids
     for purchase_name in test_purchases_uncategorized:
         cur.execute(
-            'INSERT INTO list001 (name) SELECT ? '
+            'INSERT INTO items001 (name) SELECT ? '
             'WHERE NOT EXISTS '
-            '(SELECT * FROM list001 WHERE name is ?)',
+            '(SELECT * FROM items001 WHERE name is ?)',
             (purchase_name, purchase_name))
-        purchase_id = cur.execute('SELECT id FROM list001 WHERE name is ?', (purchase_name,)).fetchall()[0][0]
+        purchase_id = cur.execute('SELECT id FROM items001 WHERE name is ?', (purchase_name,)).fetchall()[0][0]
         test_purchases_uncategorized_ids.append(purchase_id)
 
     # Добавляем в Базу данных категории из test_categories и записываем их id в test_categories_ids
+    counter = 1
     for category_name in test_categories:
         cur.execute(
-            'INSERT INTO categories (name) SELECT ? '
+            'INSERT INTO categories (name, number) SELECT ?, ? '
             'WHERE NOT EXISTS '
-            '(SELECT * FROM categories WHERE name is ?)',
-            (category_name, category_name))
+            '(SELECT * FROM categories WHERE name is ? AND number=?)',
+            (category_name, counter, category_name, counter))
         category_id = cur.execute('SELECT id FROM categories WHERE name is ?', (category_name,)).fetchall()[0][0]
         test_categories_ids.append(category_id)
+        counter += 1
 
     # добавляем в базу данных связь между покупками из test_purchases_ids
     # и категориями из test_categories_ids
@@ -73,11 +75,11 @@ def sql_prepare():
 def sql_clean():
 
     for purchase_id in test_purchases_ids:
-        cur.execute('DELETE FROM list001 WHERE id=?', (purchase_id,))
+        cur.execute('DELETE FROM items001 WHERE id=?', (purchase_id,))
         cur.execute('DELETE FROM link_categories_and_purchases WHERE purchase_id=?', (purchase_id,))
 
     for purchase_id in test_purchases_uncategorized_ids:
-        cur.execute('DELETE FROM list001 WHERE id=?', (purchase_id,))
+        cur.execute('DELETE FROM items001 WHERE id=?', (purchase_id,))
         cur.execute('DELETE FROM link_categories_and_purchases WHERE purchase_id=?', (purchase_id,))
 
     for category_id in test_categories_ids:
@@ -86,24 +88,25 @@ def sql_clean():
     base.commit()
 
 
+# Функция, которую тестирует этот тест больше не актуальна
 # OK
-@pytest.mark.asyncio
-async def test_in_category_from_which_category():
-    sql_start()
-    sql_prepare()
-    message = types.Message()
-    returned = await in_category_from_which_category(message, test=True)
-    print(f'\n\nreturned:\n{returned}')
-    keyboard = returned['keyboard']
-    text = returned['text']
-
-    print(f'\nkeyboard:')
-    i = 1
-    for key in keyboard["inline_keyboard"][0]:
-        print(f'key{i}: {key}')
-        i += 1
-    print(f'\n\nTEXT:\n{text}')
-    sql_clean()
+# @pytest.mark.asyncio
+# async def test_in_category_from_which_category():
+#     sql_start()
+#     sql_prepare()
+#     message = types.Message()
+#     returned = await in_category_from_which_category(message, test=True)
+#     print(f'\n\nreturned:\n{returned}')
+#     keyboard = returned['keyboard']
+#     text = returned['text']
+#
+#     print(f'\nkeyboard:')
+#     i = 1
+#     for key in keyboard["inline_keyboard"][0]:
+#         print(f'key{i}: {key}')
+#         i += 1
+#     print(f'\n\nTEXT:\n{text}')
+#     sql_clean()
 
 
 # OK
@@ -116,7 +119,7 @@ async def test_categorize_all_single():
     returned = await categorize_all_single(callback_query, test=True)
     print(f'\n{returned}')
     id_list_of_uncategorized_purchases_ids = returned['id_list_of_uncategorized_purchases_ids']
-    cur.execute('DELETE FROM list001 WHERE id=?', (id_list_of_uncategorized_purchases_ids,))
+    cur.execute('DELETE FROM items001 WHERE id=?', (id_list_of_uncategorized_purchases_ids,))
 
     sql_clean()
 
@@ -137,6 +140,30 @@ async def test_in_category_which_purchase():
             print(f'{element}:\n')
             count = 1
             for key in returned[element]['inline_keyboard'][0]:
+                print(f'key {count}: {key}')
+
+    sql_clean()
+
+
+@pytest.mark.asyncio
+async def test_in_category_which_purchase():
+    sql_start()
+    sql_prepare()
+
+    callback_query = types.CallbackQuery()
+    callback_query.data = f'in_category_which_purchase {test_categories_ids[0]}'
+
+    returned = await in_category_which_purchase(callback_query, test=True)
+
+    print('\n\nreturned:\n')
+    for element_key in returned:
+        if element_key != 'keyboard':
+            print(f'{element_key}:\n{returned[element_key]}\n')
+        else:
+            print(f'keyboard:\n')
+            print(returned['keyboard'])
+            count = 1
+            for key in returned['keyboard']['inline_keyboard'][0]:
                 print(f'key {count}: {key}')
 
     sql_clean()

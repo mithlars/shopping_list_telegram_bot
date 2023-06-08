@@ -22,7 +22,7 @@ async def sql_categorize(id_of_list_of_purchases_ids, category_id):
     print('sql_categorize')
     print(f'category_id: {category_id}')
     print(f'id_of_list_of_purchases_ids: {id_of_list_of_purchases_ids}')
-    purchases_ids_str = cur.execute('SELECT comment FROM list001 WHERE id IS ?',
+    purchases_ids_str = cur.execute('SELECT comment FROM items001 WHERE id IS ?',
                                     (str(id_of_list_of_purchases_ids),)).fetchall()[0][0]
     purchases_ids_list = purchases_ids_str.split(",")
     if purchases_ids_list[-1] == '-50':
@@ -37,21 +37,21 @@ async def sql_categorize(id_of_list_of_purchases_ids, category_id):
         if len(purchases_ids_list) > 1:
             purchase_id = purchases_ids_list[0]
             print(f'purchase_id: {purchase_id}')
-            purchase_name = cur.execute("SELECT name FROM list001 WHERE id IS ?",
+            purchase_name = cur.execute("SELECT name FROM items001 WHERE id IS ?",
                                         (purchase_id,)).fetchall()[0][0]
             purchases_ids_string = ','.join(map(str, purchases_ids_list))
-            cur.execute('UPDATE list001 SET comment=? WHERE id=?', (purchases_ids_string, id_of_list_of_purchases_ids))
+            cur.execute('UPDATE items001 SET comment=? WHERE id=?', (purchases_ids_string, id_of_list_of_purchases_ids))
             base.commit()
             print('\n___ sql_categorize ____FINISH\n')
             return purchase_name
         else:
-            cur.execute('DELETE FROM list001 WHERE id IS ?', (str(id_of_list_of_purchases_ids),))
+            cur.execute('DELETE FROM items001 WHERE id IS ?', (str(id_of_list_of_purchases_ids),))
             base.commit()
             print('\n___ sql_categorize ____FINISH\n')
             return ''
 
     else:
-        cur.execute('DELETE FROM list001 WHERE id IS ?', (str(id_of_list_of_purchases_ids),))
+        cur.execute('DELETE FROM items001 WHERE id IS ?', (str(id_of_list_of_purchases_ids),))
         print(f'purchases_ids_list: {purchases_ids_list}')
         for purchase_id in purchases_ids_list:
             if int(category_id) != -1:

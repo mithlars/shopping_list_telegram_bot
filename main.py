@@ -6,6 +6,7 @@ from handlers.purchase_changing import register_handlers_purchase_changing
 from handlers.category_in_out import register_handlers_category_in_out
 from aiogram.utils import executor
 from data_base.sql_main import sql_start
+from classes.Middleware import Middleware
 
 
 async def on_startup(_):
@@ -21,6 +22,7 @@ register_handlers_category_in_out(dp)
 
 
 register_handlers_purchases(dp)
+dp.middleware.setup(Middleware())
 
 
 

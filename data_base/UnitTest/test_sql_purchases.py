@@ -5,8 +5,8 @@ from data_base.sql_main import cur, base, sql_start
 
 # sql_start()
 # """ Добавляем в базу данных тестовый товар, чтобы проверить его id в ответе функции"""
-# cur.execute("INSERT INTO list001 (name) VALUES ('test_milk')")
-# test_milk_id = cur.execute("SELECT id FROM list001 WHERE name IS 'test_milk'").fetchall()[0][0]
+# cur.execute("INSERT INTO items001 (name) VALUES ('test_milk')")
+# test_milk_id = cur.execute("SELECT id FROM items001 WHERE name IS 'test_milk'").fetchall()[0][0]
 # print(f'\ntest_milk_id: {test_milk_id}')
 # purchases_for_add = [
 #     'test_milk',
@@ -37,7 +37,7 @@ class sql_add_command_test(TestCase):
 
 
 """Удаляем из базы данных тестовую позицию"""
-# cur.execute('DELETE FROM list001 WHERE id IS ?', (test_milk_id,))
+# cur.execute('DELETE FROM items001 WHERE id IS ?', (test_milk_id,))
 
 
 if __name__ == '__main__':

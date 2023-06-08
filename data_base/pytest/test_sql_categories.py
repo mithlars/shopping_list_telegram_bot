@@ -7,11 +7,11 @@ from data_base.sql_categories import sql_categorize_or_uncategorize_current_purc
 def sql_prepare_for_test_sql_categorize_current_purchase():
     purchase_name = 'test_Туалетная бумага'
     cur.execute(
-        'INSERT INTO list001 (name) SELECT ? '
+        'INSERT INTO items001 (name) SELECT ? '
         'WHERE NOT EXISTS '
-        '(SELECT name FROM list001 WHERE name is ?)',
+        '(SELECT name FROM items001 WHERE name is ?)',
         (purchase_name, purchase_name))
-    purchase_id = cur.execute('SELECT id FROM list001 WHERE name is ?', (purchase_name,)).fetchall()[0][0]
+    purchase_id = cur.execute('SELECT id FROM items001 WHERE name is ?', (purchase_name,)).fetchall()[0][0]
 
     category_name = 'test_Инструменты'
     cur.execute(
@@ -35,7 +35,7 @@ def sql_prepare_for_test_sql_categorize_current_purchase():
 
 def sql_clean_for_test_sql_categorize_current_purchase(purchase_id, category_id):
 
-    cur.execute('DELETE FROM list001 WHERE id=?', (purchase_id,))
+    cur.execute('DELETE FROM items001 WHERE id=?', (purchase_id,))
 
     cur.execute('DELETE FROM link_categories_and_purchases WHERE purchase_id=?', (purchase_id,))
 
@@ -82,8 +82,8 @@ def sql_prepare_for_test_make_used_categories_ids_list():
         cur.execute('INSERT INTO categories (name, number) VALUES (?, ?)', (categories_names[i], i + 1))
         category_id = cur.execute('SELECT id FROM categories WHERE name=?', (categories_names[i],)).fetchall()[0][0]
         categories_ids.append(category_id)
-        cur.execute('INSERT INTO list001 (name) VALUES (?)', (purchases_names[i],))
-        purchase_id = cur.execute('SELECT id FROM list001 WHERE name=?', (purchases_names[i],)).fetchall()[0][0]
+        cur.execute('INSERT INTO items001 (name) VALUES (?)', (purchases_names[i],))
+        purchase_id = cur.execute('SELECT id FROM items001 WHERE name=?', (purchases_names[i],)).fetchall()[0][0]
         purchases_ids.append(purchase_id)
 
     for i in range(len(categories_names)):
@@ -97,8 +97,8 @@ def sql_prepare_for_test_make_used_categories_ids_list():
     purchase_name = 'Таблетки от жадности'
     cur.execute('INSERT INTO categories (name, number) VALUES (?, ?)', (category_name, len(categories_names) + 1))
     category_id = cur.execute('SELECT id FROM categories WHERE name=?', (category_name,)).fetchall()[0][0]
-    cur.execute('INSERT INTO list001 (name) VALUES (?)', (purchase_name,))
-    purchase_id = cur.execute('SELECT id FROM list001 WHERE name=?', (purchase_name,)).fetchall()[0][0]
+    cur.execute('INSERT INTO items001 (name) VALUES (?)', (purchase_name,))
+    purchase_id = cur.execute('SELECT id FROM items001 WHERE name=?', (purchase_name,)).fetchall()[0][0]
 
     base.commit()
     return categories_ids, purchases_ids, category_id, purchase_id
@@ -107,7 +107,7 @@ def sql_prepare_for_test_make_used_categories_ids_list():
 def sql_clear_for_test_make_used_categories_ids_list(categories_ids, purchases_ids, category_id, purchase_id):
     purchases_ids.append(purchase_id)
     for purchase_id in purchases_ids:
-        cur.execute('DELETE FROM list001 WHERE id=?', (purchase_id,))
+        cur.execute('DELETE FROM items001 WHERE id=?', (purchase_id,))
         cur.execute('DELETE FROM link_categories_and_purchases WHERE purchase_id=?', (purchase_id,))
 
     categories_ids.append(category_id)

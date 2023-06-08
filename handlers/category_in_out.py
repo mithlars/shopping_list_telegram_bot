@@ -4,7 +4,9 @@ from aiogram.dispatcher.filters import Text
 
 from create_bot import bot
 
-from data_base.sql_categories import sql_read_categories, sql_categorize_or_uncategorize_current_purchase
+from data_base.sql_categories import sql_read_categories, \
+                                     sql_categorize_or_uncategorize_current_purchase,\
+                                     sql_read_used_categories_ids
 from data_base.sql_main import make_text_from_select, cur, base
 from data_base.sql_purchases import make_text_and_count_of_list_for_category
 
@@ -17,35 +19,36 @@ from keyboards.purchases_kb import make_purchases_list_inline_keyboard
 Файл содержит набор handler-функций для назначения и удаления связей между товарами и категориями. 
 """
 
+# Функция не актуальна. Бизнес-процесс изменен и щаг с выбором категории из которой нужно выбрать покупку пропускается
+#   сразу выводится весь список покупок, разбитый по категориям и выбирается покупка, которую нужно исключить из категории
+# async def in_category_from_which_category(message: types.Message, test=False):
+#     """
+#     В категорию. START.
+#
+#     Функция получает команду "В категорию" и запускает бизнес-процесс добавления товара в категорию.
+#     Отправляет сообщение пользователю с запросом выбрать категорию из которой нужно взять товар,
+#     для назначения связи с другой категорией.
+#     В качестве опции предлагается назначить категорию/рии всем товарам без категории.
+#     """
+#     print('\n***********************************\nin_category_from_which_category ____START\n')
+#     categories_data = await sql_read_categories()
+#     message_text = 'В какой категории присутствует товар, для которого Вы хотите добавить/изменить категорию?\n'
+#     message_text += await make_text_from_select(categories_data, counter_starts_from=1)
+#     count = len(message_text.split('\n'))
+#     message_text += f'\n{count} Без категории'
+#     keyboard = await make_from_which_category_keyboard('in_category_which_purchase ')
+#     keyboard.insert(InlineKeyboardButton(text=f'{count}', callback_data='in_category_which_purchase -1'))
+#     keyboard.add(InlineKeyboardButton(text='Все товары без категории',
+#                                       callback_data='categorize_all_single_purchases'))
+#     keyboard.insert(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
+#     if test:
+#         return {'keyboard': keyboard, 'text': message_text}
+#     else:
+#         await bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
+#     print('\nin_category_from_which_category ____FINISH\n***********************************\n')
 
-async def in_category_from_which_category(message: types.Message, test=False):
-    """
-    В категорию. START.
 
-    Функция получает команду "В категорию" и запускает бизнес-процесс добавления товара в категорию.
-    Отправляет сообщение пользователю с запросом выбрать категорию из которой нужно взять товар,
-    для назначения связи с другой категорией.
-    В качестве опции предлагается назначить категорию/рии всем товарам без категории.
-    """
-    print('\n***********************************\nin_category_from_which_category ____START\n')
-    categories_data = await sql_read_categories()
-    message_text = 'В какой категории присутствует товар, для которого Вы хотите добавить/изменить категорию?\n'
-    message_text += await make_text_from_select(categories_data, counter_starts_from=1)
-    count = len(message_text.split('\n'))
-    message_text += f'\n{count} Без категории'
-    keyboard = await make_from_which_category_keyboard('in_category_which_purchase ')
-    keyboard.insert(InlineKeyboardButton(text=f'{count}', callback_data='in_category_which_purchase -1'))
-    keyboard.add(InlineKeyboardButton(text='Все товары без категории',
-                                      callback_data='categorize_all_single_purchases'))
-    keyboard.insert(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
-    if test:
-        return {'keyboard': keyboard, 'text': message_text}
-    else:
-        await bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
-    print('\nin_category_from_which_category ____FINISH\n***********************************\n')
-
-
-async def out_of_category(message: types.message, test=False):
+async def out_of_category_from_which_category(message: types.message, test=False):
     """
     Из категории. START.
 
@@ -78,12 +81,12 @@ async def categorize_all_single(callback: types.CallbackQuery, test=False):
     for purchase_id_data in uncategorized_purchases_ids_data:
         uncategorized_purchases_ids.append(purchase_id_data[0])
     uncategorized_purchases_ids_str = ','.join(map(str, uncategorized_purchases_ids))
-    cur.execute('INSERT INTO list001 (comment) VALUES (?)', (uncategorized_purchases_ids_str,))
-    id_list_of_uncategorized_purchases_ids = cur.execute('SELECT id FROM list001 WHERE comment IS ?',
+    cur.execute('INSERT INTO items001 (comment) VALUES (?)', (uncategorized_purchases_ids_str,))
+    id_list_of_uncategorized_purchases_ids = cur.execute('SELECT id FROM items001 WHERE comment IS ?',
                                                          (uncategorized_purchases_ids_str,)).fetchall()[0][0]
     count = 1
     for purchase_id in uncategorized_purchases_ids:
-        purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
+        purchase_name = cur.execute('SELECT name FROM items001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
         if count != len(uncategorized_purchases_ids):
             uncategorized_purchases_text += f'{purchase_name}\n'
         else:
@@ -101,21 +104,72 @@ async def categorize_all_single(callback: types.CallbackQuery, test=False):
                                   in_category=True)
 
 
-async def in_category_which_purchase(callback: types.CallbackQuery, test=False):
+# Старая версия функции, когда предварительно выводился запрос с просьбой выбрать категорию, из которой будет удалена
+#   покупка.
+# async def in_category_which_purchase(callback: types.CallbackQuery, test=False):
+#     """
+#     Выбор товара для категоризации.
+#
+#     Функция получает категорию из которой нужно выбрать товар для НАЗНАЧЕНИЯ новой связи с другой категорией.
+#     Отправляет сообщение пользователю со списком товаров из этой категории с просьбой выбрать один из них.
+#     """
+#     category_id = callback.data.replace('in_category_which_purchase ', '')
+#     message_text = 'Для какого товара Вы хотите добавить/изменить категорию?\n'
+#     command_text = f'in_category_in_which_category {category_id} '
+#     keyboard = await make_purchases_list_inline_keyboard([category_id], command_text=command_text)
+#
+#     text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id, [],
+#                                                                                          counter_starts_from=1)
+#     message_text += text_and_count_of_list_for_category['text']
+#
+#     if test:
+#         return {
+#             'category_id': category_id,
+#             'message_text': message_text,
+#             'keyboard': keyboard
+#         }
+#     else:
+#         keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
+#         await bot.send_message(callback.message.chat.id, message_text, reply_markup=keyboard)
+
+
+
+async def in_category_which_purchase(message: types.Message, test=False):
     """
     Выбор товара для категоризации.
 
     Функция получает категорию из которой нужно выбрать товар для НАЗНАЧЕНИЯ новой связи с другой категорией.
     Отправляет сообщение пользователю со списком товаров из этой категории с просьбой выбрать один из них.
     """
-    category_id = callback.data.replace('in_category_which_purchase ', '')
     message_text = 'Для какого товара Вы хотите добавить/изменить категорию?\n'
-    command_text = f'in_category_in_which_category {category_id} '
-    keyboard = await make_purchases_list_inline_keyboard([category_id], command_text=command_text)
-
-    text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id, [],
+    # Запрос из базы банных списка категорий, имеющих связь с покупками:
+    used_categories_ids = await sql_read_used_categories_ids()
+    zeroth_category_id = used_categories_ids.pop(0)
+    command_text = f'in_category_in_which_category {zeroth_category_id} '
+    keyboard = await make_purchases_list_inline_keyboard([zeroth_category_id], command_text=command_text)
+    number = 1
+    for buttons_line in keyboard['inline_keyboard']:
+        number += len(buttons_line)
+    text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(zeroth_category_id, [],
                                                                                          counter_starts_from=1)
-    message_text += text_and_count_of_list_for_category['text']
+    message_text += '\n' + f'{text_and_count_of_list_for_category["category_name"]}' + \
+                    '\n' + f"{text_and_count_of_list_for_category['text']}"
+    for category_id in used_categories_ids:
+        command_text = f'in_category_in_which_category {category_id} '
+        text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id, [],
+                                                                                             counter_starts_from=number)
+        message_text += '\n' + f'{text_and_count_of_list_for_category["category_name"]}' + \
+                        '\n' + f"{text_and_count_of_list_for_category['text']}"
+
+        category_keyboard = await make_purchases_list_inline_keyboard([category_id],
+                                                                      command_text=command_text,
+                                                                      counter_starts_from = number)
+        category_keyboards_buttons = category_keyboard['inline_keyboard']
+
+        for buttons_line in category_keyboards_buttons:
+            number += len(buttons_line)
+            for button in buttons_line:
+                keyboard.insert(button)
 
     if test:
         return {
@@ -125,7 +179,7 @@ async def in_category_which_purchase(callback: types.CallbackQuery, test=False):
         }
     else:
         keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
-        await bot.send_message(callback.message.chat.id, message_text, reply_markup=keyboard)
+        await bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
 
 
 async def out_of_category_which_purchase(callback: types.CallbackQuery, test=False):
@@ -167,11 +221,11 @@ async def in_category_in_which_category(callback: types.CallbackQuery, test=Fals
     ids_list = callback.data.replace('in_category_in_which_category ', '').split(' ')
     prev_category_id = ids_list[0]
     purchase_id = ids_list[1]
-    purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
+    purchase_name = cur.execute('SELECT name FROM items001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
     print(f'purchase_id: {purchase_name}')
     keyboard = await make_from_which_category_keyboard(f'in_category_categorize {prev_category_id} {purchase_id} ',
                                                        exceptions_ids=[prev_category_id])
-    message_text = f'Выберите новую категорию для покупки {purchase_name}:'
+    message_text = f'Выберите новую категорию для покупки {purchase_name}:\n'
     categories_data = await sql_read_categories()
     message_text += await make_text_from_select(categories_data, counter_starts_from=1)
     if test:
@@ -202,7 +256,7 @@ async def in_category_categorize(callback: types.CallbackQuery, test=False):
         prev_category_name = cur.execute('SELECT name FROM categories WHERE id IS ?', (prev_category_id,)).fetchall()[0][0]
     purchase_id = ids_list[1]
     print(f'purchase_id: {purchase_id}')
-    purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
+    purchase_name = cur.execute('SELECT name FROM items001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
     category_id = ids_list[2]
     print(f'category_id: {category_id}')
     category_name = cur.execute('SELECT name FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
@@ -220,7 +274,7 @@ async def in_category_categorize(callback: types.CallbackQuery, test=False):
             uncategorize_keyword.insert(InlineKeyboardButton(text='Удалить',
                                                              callback_data=f'uncategorize {prev_category_id} {purchase_id}'))
             uncategorize_keyword.insert(InlineKeyboardButton(text='Оставить', callback_data='in_category_finish'))
-            uncategorize_keyword.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
+            # uncategorize_keyword.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
             await bot.send_message(callback.message.chat.id, message_text, reply_markup=uncategorize_keyword)
     print('\nin_category_categorize ____FINISH\n***********************************\n')
 
@@ -245,7 +299,7 @@ async def out_of_category_finish(callback: types.CallbackQuery, test=False):
     category_id = ids_list[0]
     category_name = cur.execute('SELECT name FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
     purchase_id = ids_list[1]
-    purchase_name = cur.execute('SELECT name FROM list001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
+    purchase_name = cur.execute('SELECT name FROM items001 WHERE id IS ?', (purchase_id,)).fetchall()[0][0]
     await sql_categorize_or_uncategorize_current_purchase(category_id, purchase_id, uncategorize=True)
     if not test:
         message_text = f'Удалена связи товара {purchase_name}  с категорией {category_name}.\n'
@@ -254,15 +308,15 @@ async def out_of_category_finish(callback: types.CallbackQuery, test=False):
 
 
 def register_handlers_category_in_out(dp: Dispatcher):
-    dp.register_message_handler(in_category_from_which_category, Text(startswith='В категорию'))
-    dp.register_message_handler(in_category_from_which_category, Text(startswith='➡️📁'))
+    dp.register_message_handler(in_category_which_purchase, Text(startswith='В категорию'))
+    dp.register_message_handler(in_category_which_purchase, Text(startswith='➡️📁'))
     dp.register_callback_query_handler(categorize_all_single, Text(equals='categorize_all_single_purchases'))
     dp.register_callback_query_handler(in_category_which_purchase, Text(startswith='in_category_which_purchase '))
     dp.register_callback_query_handler(in_category_in_which_category, Text(startswith='in_category_in_which_category '))
     dp.register_callback_query_handler(in_category_categorize, Text(startswith='in_category_categorize '))
     dp.register_callback_query_handler(in_category_finish, Text(equals='in_category_finish'))
 
-    dp.register_message_handler(out_of_category, Text(equals='Из категории'))
-    dp.register_message_handler(out_of_category, Text(equals='⬅️📁'))
+    dp.register_message_handler(out_of_category_from_which_category, Text(equals='Из категории'))
+    dp.register_message_handler(out_of_category_from_which_category, Text(equals='⬅️📁'))
     dp.register_callback_query_handler(out_of_category_which_purchase, Text(startswith='out_of_category_which_purchase'))
     dp.register_callback_query_handler(out_of_category_finish, Text(startswith='out_of_category_finish '))
