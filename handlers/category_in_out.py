@@ -48,22 +48,24 @@ from keyboards.purchases_kb import make_purchases_list_inline_keyboard
 #     print('\nin_category_from_which_category ____FINISH\n***********************************\n')
 
 
-async def out_of_category_from_which_category(message: types.message, test=False):
-    """
-    Из категории. START.
-
-    Функция получает команду "Из категории" и запускает бизнес-процесс удаления связи между товаром и категорией.
-    Отправляет сообщение пользователю с запросом выбрать категорию из которой нужно удалить товар.
-    """
-    categories_data = await sql_read_categories()
-    message_text = 'Из какой категории Вы хотите удалить товар?\n'
-    message_text += await make_text_from_select(categories_data, counter_starts_from=1)
-    keyboard = await make_from_which_category_keyboard('out_of_category_which_purchase ')
-    keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
-    if test:
-        return {'keyboard': keyboard, 'text': message_text}
-    else:
-        await bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
+# Старая версия функции, когда предварительно выводился запрос с просьбой выбрать категорию, из которой будет удалена
+#   покупка.
+# async def out_of_category_from_which_category(message: types.message, test=False):
+#     """
+#     Из категории. START.
+#
+#     Функция получает команду "Из категории" и запускает бизнес-процесс удаления связи между товаром и категорией.
+#     Отправляет сообщение пользователю с запросом выбрать категорию из которой нужно удалить товар.
+#     """
+#     categories_data = await sql_read_categories()
+#     message_text = 'Из какой категории Вы хотите удалить товар?\n'
+#     message_text += await make_text_from_select(categories_data, counter_starts_from=1)
+#     keyboard = await make_from_which_category_keyboard('out_of_category_which_purchase ')
+#     keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
+#     if test:
+#         return {'keyboard': keyboard, 'text': message_text}
+#     else:
+#         await bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
 
 
 async def categorize_all_single(callback: types.CallbackQuery, test=False):
@@ -150,13 +152,15 @@ async def in_category_which_purchase(message: types.Message, test=False):
     number = 1
     for buttons_line in keyboard['inline_keyboard']:
         number += len(buttons_line)
-    text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(zeroth_category_id, [],
+    text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(zeroth_category_id,
+                                                                                         [],
                                                                                          counter_starts_from=1)
     message_text += '\n' + f'{text_and_count_of_list_for_category["category_name"]}' + \
                     '\n' + f"{text_and_count_of_list_for_category['text']}"
     for category_id in used_categories_ids:
         command_text = f'in_category_in_which_category {category_id} '
-        text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id, [],
+        text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id,
+                                                                                             [],
                                                                                              counter_starts_from=number)
         message_text += '\n' + f'{text_and_count_of_list_for_category["category_name"]}' + \
                         '\n' + f"{text_and_count_of_list_for_category['text']}"
@@ -181,32 +185,73 @@ async def in_category_which_purchase(message: types.Message, test=False):
         await bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
 
 
-async def out_of_category_which_purchase(callback: types.CallbackQuery, test=False):
+async def out_of_category_which_purchase(message: types.Message, test=False):
     """
     Выбор товара для УДАЛЕНИЯ связи с категорией.
 
     Функция получает категорию из которой нужно выбрать товар для УДАЛЕНИЯ связи с категорией.
     Отправляет сообщение пользователю со списком товаров из этой категории с просьбой выбрать один из них.
     """
-    category_id = callback.data.replace('out_of_category_which_purchase ', '')
-    category_name = cur.execute('SELECT name FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
-    message_text = f'Какой товар Вы хотите удалить из категории {category_name}?\n'
-    command_text = f'out_of_category_finish {category_id} '
-    keyboard = await make_purchases_list_inline_keyboard([category_id], command_text=command_text)
+    # category_id = callback.data.replace('out_of_category_which_purchase ', '')
+    # category_name = cur.execute('SELECT name FROM categories WHERE id IS ?', (category_id,)).fetchall()[0][0]
+    # message_text = f'Какой товар Вы хотите удалить из категории {category_name}?\n'
+    # command_text = f'out_of_category_finish {category_id} '
+    # keyboard = await make_purchases_list_inline_keyboard([category_id], command_text=command_text)
+    #
+    # text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id, [],
+    #                                                                                      counter_starts_from=1)
+    # message_text += text_and_count_of_list_for_category['text']
+    #
+    # if test:
+    #     return {
+    #         'category_id': category_id,
+    #         'message_text': message_text,
+    #         'keyboard': keyboard
+    #     }
+    # else:
+    #     keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
+    #     await bot.send_message(callback.message.chat.id, message_text, reply_markup=keyboard)
 
-    text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id, [],
+    message_text = 'Для какого товара Вы хотите добавить/изменить категорию?\n'
+    # Запрос из базы банных списка категорий, имеющих связь с покупками:
+    used_categories_ids = await sql_read_used_categories_ids()
+    zeroth_category_id = used_categories_ids.pop(0)
+    command_text = f'out_of_category_finish {zeroth_category_id} '
+    keyboard = await make_purchases_list_inline_keyboard([zeroth_category_id], command_text=command_text)
+    number = 1
+    for buttons_line in keyboard['inline_keyboard']:
+        number += len(buttons_line)
+    text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(zeroth_category_id,
+                                                                                         [],
                                                                                          counter_starts_from=1)
-    message_text += text_and_count_of_list_for_category['text']
+    message_text += '\n' + f'{text_and_count_of_list_for_category["category_name"]}' + \
+                    '\n' + f"{text_and_count_of_list_for_category['text']}"
+    for category_id in used_categories_ids:
+        command_text = f'out_of_category_finish {category_id} '
+        text_and_count_of_list_for_category = await make_text_and_count_of_list_for_category(category_id,
+                                                                                             [],
+                                                                                             counter_starts_from=number)
+        message_text += '\n' + f'{text_and_count_of_list_for_category["category_name"]}' + \
+                        '\n' + f"{text_and_count_of_list_for_category['text']}"
+
+        category_keyboard = await make_purchases_list_inline_keyboard([category_id],
+                                                                      command_text=command_text,
+                                                                      counter_starts_from = number)
+        category_keyboards_buttons = category_keyboard['inline_keyboard']
+
+        for buttons_line in category_keyboards_buttons:
+            number += len(buttons_line)
+            for button in buttons_line:
+                keyboard.insert(button)
 
     if test:
         return {
-            'category_id': category_id,
             'message_text': message_text,
             'keyboard': keyboard
         }
     else:
         keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='in_category_finish'))
-        await bot.send_message(callback.message.chat.id, message_text, reply_markup=keyboard)
+        await bot.send_message(message.chat.id, message_text, reply_markup=keyboard)
 
 
 async def in_category_in_which_category(callback: types.CallbackQuery, test=False):
@@ -315,7 +360,6 @@ def register_handlers_category_in_out(dp: Dispatcher):
     dp.register_callback_query_handler(in_category_categorize, Text(startswith='in_category_categorize '))
     dp.register_callback_query_handler(in_category_finish, Text(equals='in_category_finish'))
 
-    dp.register_message_handler(out_of_category_from_which_category, Text(equals='Из категории'))
-    dp.register_message_handler(out_of_category_from_which_category, Text(equals='⬅️📁'))
+    dp.register_message_handler(out_of_category_which_purchase, Text(equals='📁➡️'))
     dp.register_callback_query_handler(out_of_category_which_purchase, Text(startswith='out_of_category_which_purchase'))
     dp.register_callback_query_handler(out_of_category_finish, Text(startswith='out_of_category_finish '))

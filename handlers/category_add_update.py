@@ -1,11 +1,4 @@
-from aiogram import types, Dispatcher
-from create_bot import bot
-from keyboards.categories_kb import *
-from keyboards.shared_kb import *
-from data_base.sql_categories import *
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.dispatcher.filters import Text
-from handlers.purchases_list import read_list_of_purchases
 from handlers.categories import *
 
 
@@ -30,13 +23,15 @@ async def update_som_category(message: types.Message):
 # ##     start updating category state:
 async def update_current_category(callback: types.CallbackQuery, state: FSMCategory.all_states):
     category_id = callback.data.replace("update_category ", "")
-    ald_category = await sql_read_category(category_id)
+    old_category = await sql_read_category(category_id)
     async with state.proxy() as data:
         data['id'] = category_id
-        data['ald_name'] = ald_category[0][1]
-        data['ald_comment'] = ald_category[0][2]
+        data['old_name'] = old_category[0][1]
+        data['оld_comment'] = old_category[0][2]
     await FSMCategory.name.set()
-    await bot.send_message(callback.message.chat.id, 'Введите новое имя новой категории', reply_markup=stop_kb_for_upd)
+    await bot.send_message(callback.message.chat.id, 'Введите новое имя категории', reply_markup=stop_kb_for_upd)
+    # Отправка сообщения со старым именем покупки свозможностью копирования одним кликом:
+    await bot.send_message(callback.message.chat.id, f"`{data['old_name']}`", parse_mode=types.ParseMode.MARKDOWN_V2)
 
 
 # ##     start adding category state by starting getting name:
@@ -57,7 +52,7 @@ async def state_cancel_handler(message: types.Message, state: FSMCategory.all_ch
 # ##     saving name and starting getting comment:
 async def add_name_for_new_category(message: types.Message, state: FSMCategory.name):
     async with state.proxy() as data:
-        if message.text == 'Без изменений':     data['name'] = data['ald_name']
+        if message.text == 'Без изменений':     data['name'] = data['оld_name']
         else:                                   data['name'] = message.text
     await FSMCategory.comment.set()
     if 'id' not in data.keys():
@@ -70,7 +65,7 @@ async def add_name_for_new_category(message: types.Message, state: FSMCategory.n
 async def add_comment_for_new_category(message: types.Message, state: FSMCategory.comment):
     async with state.proxy() as data:
         if message.text == 'Без описания':   data['comment'] = ''
-        elif message.text == 'Без изменений':   data['comment'] = data['ald_comment']
+        elif message.text == 'Без изменений':   data['comment'] = data['оld_comment']
         else:                                   data['comment'] = message.text
     if 'id' not in data.keys():
         await sql_add_category(data['name'], data['comment'])
@@ -78,7 +73,7 @@ async def add_comment_for_new_category(message: types.Message, state: FSMCategor
         if categories_data[0][1] == 'The list is empty.':
             await sql_delete_category(categories_data[0][0])
         await message.reply("Категоря добавлена")
-    elif data['name'] != data['ald_name'] or data['comment'] != data['ald_comment']:
+    elif data['name'] != data['оld_name'] or data['comment'] != data['оld_comment']:
         await sql_update_category(data['id'], data['name'], data['comment'])
         await message.reply("Категоря изменена")
     else:

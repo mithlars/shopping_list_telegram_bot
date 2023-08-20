@@ -26,7 +26,7 @@ async def update_som_purchase(message: types.Message):
         await bot.send_message(message.chat.id, 'Список покупок пуст', reply_markup=purchase_main_kb)
     else:
         await bot.send_message(message.chat.id, 'Выберите, какую запись Вы хотите изменить:', reply_markup=purchase_main_kb)
-        await bot.send_message(message.chat.id, text, reply_markup=delete_keyboard_inline)
+        await bot.send_message(message.chat.id, text, reply_markup=delete_keyboard_inline, parse_mode="HTML")
 
 
 # ##     start updating purchase state:
@@ -39,8 +39,17 @@ async def update_current_purchase(callback: types.CallbackQuery, state: FSMPurch
         data['old_comment'] = purchase[0][2]
         data['old_categories_ids'] = await sql_get_categories_ids_for_purchase(purchase_id)
     await FSMPurchase.name.set()
-    await bot.send_message(callback.message.chat.id, 'Введите новое имя новой покупки', reply_markup=stop_kb_for_upd_purchase_name)
-    await bot.send_message(callback.message.chat.id, data['old_name'])
+    # Удаление кнопки "Отмена пок.":
+    if stop_kb_for_upd_purchase_name["keyboard"][0][0]["text"] == "Отмена пок.":
+        del stop_kb_for_upd_purchase_name["keyboard"][0][0]
+    await bot.send_message(
+        callback.message.chat.id,
+        'Введите новое имя новой покупки. \n'
+        'Старое имя можно скопировать нажатием левоя кнопки мыши.',
+        reply_markup=stop_kb_for_upd_purchase_name
+    )
+    # Отправка сообщения со старым именем покупки свозможностью копирования одним кликом:
+    await bot.send_message(callback.message.chat.id, f"`{data['old_name']}`", parse_mode=types.ParseMode.MARKDOWN_V2)
 
 
 # ##     abort state at any stage:

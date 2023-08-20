@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup
 from data_base.sql_main import cur
 from keyboards.shared_kb import make_inline_keyboard_and_buttons_list
 
@@ -12,12 +12,12 @@ main_b2 = KeyboardButton(text='📜')
 main_b3 = KeyboardButton(text='🧹')
 # main_b4 = KeyboardButton(text='Изменить')
 main_b4 = KeyboardButton(text='✏️')
-main_b5 = KeyboardButton(text='📁')
 # main_b5 = KeyboardButton(text='Категории')
-main_b6 = KeyboardButton(text='Из категории')
-main_b6 = KeyboardButton(text='⬅️📁')
-# main_b7 = KeyboardButton(text='В категорию')
-main_b7 = KeyboardButton(text='➡️📁')
+main_b5 = KeyboardButton(text='📁')
+#main_b6 = KeyboardButton(text='В категорию')
+main_b6 = KeyboardButton(text='➡️📁')
+# main_b7 = KeyboardButton(text='Из категории')
+main_b7 = KeyboardButton(text='📁➡️')
 purchase_main_kb \
     .insert(main_b2) \
     .insert(main_b3) \
