@@ -1,5 +1,5 @@
 import sqlite3
-import psycopg2
+# import psycopg2
 
 
 base = sqlite3.connect('shopping_list.db')

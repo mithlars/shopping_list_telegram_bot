@@ -42,6 +42,7 @@ async def make_purchases_list_inline_keyboard(categories_ids_list, command_text,
         for button in buttons_list:
             keyboard.insert(button)
     print('___ make_purchases_list_inline_keyboard ____FINISH')
+    keyboard["inline_keyboard"] = list(reversed(keyboard['inline_keyboard']))
     return keyboard
 
 
